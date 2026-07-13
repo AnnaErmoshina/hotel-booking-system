@@ -5,10 +5,14 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.26.xsd">
 
-    <!--
-        Migrations will be included here one by one, e.g.:
-        <include file="db/changelog/changes/001-create-users-table.xml"/>
-        <include file="db/changelog/changes/002-create-hotels-table.xml"/>
-    -->
+    <include file="db/changelog/changes/001-create-users-table.xml"/>
+    <include file="db/changelog/changes/002-create-hotels-table.xml"/>
+    <include file="db/changelog/changes/003-create-amenities-table.xml"/>
+    <include file="db/changelog/changes/004-create-room-types-table.xml"/>
+    <include file="db/changelog/changes/005-create-room-type-amenities-table.xml"/>
+    <include file="db/changelog/changes/006-create-rooms-table.xml"/>
+    <include file="db/changelog/changes/007-create-bookings-table.xml"/>
+    <include file="db/changelog/changes/008-create-payments-table.xml"/>
+    <include file="db/changelog/changes/009-create-reviews-table.xml"/>
 
 </databaseChangeLog>
