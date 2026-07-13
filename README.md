@@ -98,7 +98,7 @@ Coverage report will be generated at `target/site/jacoco/index.html`.
 - [x] Docker & Docker Compose setup
 - [x] Database schema & Liquibase migrations
 - [x] JPA entities
-- [ ] Repositories
+- [x] Repositories
 - [ ] Authentication & authorization (JWT, roles)
 - [ ] Booking business logic
 - [ ] REST endpoints
