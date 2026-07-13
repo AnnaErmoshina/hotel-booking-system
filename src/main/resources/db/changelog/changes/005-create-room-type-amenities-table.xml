@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.26.xsd">
+
+    <changeSet id="005-create-room-type-amenities-table" author="hotel-booking-team">
+        <createTable tableName="room_type_amenities">
+            <column name="room_type_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_rta_room_type"
+                             references="room_types(id)"/>
+            </column>
+            <column name="amenity_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_rta_amenity"
+                             references="amenities(id)"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="room_type_amenities"
+                        columnNames="room_type_id, amenity_id"
+                        constraintName="pk_room_type_amenities"/>
+    </changeSet>
+
+</databaseChangeLog>

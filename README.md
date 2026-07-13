@@ -96,8 +96,9 @@ Coverage report will be generated at `target/site/jacoco/index.html`.
 - [x] Project skeleton & layered architecture
 - [x] Base Spring Boot / Maven configuration
 - [x] Docker & Docker Compose setup
-- [ ] Database schema & Liquibase migrations
-- [ ] Entities & repositories
+- [x] Database schema & Liquibase migrations
+- [x] JPA entities
+- [ ] Repositories
 - [ ] Authentication & authorization (JWT, roles)
 - [ ] Booking business logic
 - [ ] REST endpoints

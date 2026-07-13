@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.26.xsd">
+
+    <changeSet id="006-create-rooms-table" author="hotel-booking-team">
+        <createTable tableName="rooms">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="room_type_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_rooms_room_type"
+                             references="room_types(id)"/>
+            </column>
+            <column name="room_number" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="floor" type="INT"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="AVAILABLE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="rooms" indexName="idx_rooms_room_type_id">
+            <column name="room_type_id"/>
+        </createIndex>
+
+        <addUniqueConstraint tableName="rooms"
+                              columnNames="room_type_id, room_number"
+                              constraintName="uq_rooms_type_number"/>
+    </changeSet>
+
+</databaseChangeLog>
