@@ -97,6 +97,23 @@ For any other endpoint, send the token in the header:
 Authorization: Bearer <token>
 ```
 
+## Main Endpoints
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| GET | `/api/hotels?city=` | List hotels by city (paginated) | No |
+| GET | `/api/hotels/{id}` | Get hotel details | No |
+| POST | `/api/hotels` | Create a hotel | HOTEL_MANAGER, ADMIN |
+| PUT | `/api/hotels/{id}` | Update a hotel | Owner or ADMIN |
+| DELETE | `/api/hotels/{id}` | Delete a hotel | Owner or ADMIN |
+| GET | `/api/hotels/{hotelId}/room-types` | List room types of a hotel | No |
+| POST | `/api/hotels/{hotelId}/room-types` | Create a room type | Hotel owner or ADMIN |
+| GET | `/api/room-types/{roomTypeId}/rooms` | List rooms of a room type | No |
+| POST | `/api/room-types/{roomTypeId}/rooms` | Add a room | Hotel owner or ADMIN |
+| POST | `/api/bookings` | Book a room | Authenticated |
+| GET | `/api/bookings/my` | List my bookings | Authenticated |
+| PATCH | `/api/bookings/{id}/cancel` | Cancel a booking | Owner or ADMIN |
+
 ## Running Tests
 
 ```bash
@@ -114,9 +131,9 @@ Coverage report will be generated at `target/site/jacoco/index.html`.
 - [x] JPA entities
 - [x] Repositories
 - [x] Authentication & authorization (JWT, roles)
-- [ ] Booking business logic
-- [ ] REST endpoints
-- [ ] Swagger documentation
+- [x] Booking business logic (date-overlap validation, price calculation)
+- [x] REST endpoints (hotels, room types, rooms, bookings)
+- [ ] Swagger documentation polish (tags are in, descriptions could grow)
 - [ ] Unit & integration tests (80%+ coverage)
 
 ## License
