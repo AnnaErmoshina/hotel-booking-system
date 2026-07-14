@@ -31,9 +31,9 @@
             </column>
         </createTable>
 
-        <addCheckConstraint tableName="reviews"
-                             constraintName="chk_reviews_rating"
-                             checkCondition="rating >= 1 AND rating &lt;= 5"/>
+        <sql>
+            ALTER TABLE reviews ADD CONSTRAINT chk_reviews_rating CHECK (rating >= 1 AND rating &lt;= 5);
+        </sql>
 
         <createIndex tableName="reviews" indexName="idx_reviews_hotel_id">
             <column name="hotel_id"/>
