@@ -83,6 +83,20 @@ Swagger UI: `http://localhost:8080/swagger-ui.html`
 mvn spring-boot:run
 ```
 
+## Authentication
+
+The API uses stateless JWT authentication.
+
+| Method | Endpoint | Description | Auth required |
+|---|---|---|---|
+| POST | `/api/auth/register` | Register a new user (role `USER`) | No |
+| POST | `/api/auth/login` | Log in, returns a JWT | No |
+
+For any other endpoint, send the token in the header:
+```
+Authorization: Bearer <token>
+```
+
 ## Running Tests
 
 ```bash
@@ -99,7 +113,7 @@ Coverage report will be generated at `target/site/jacoco/index.html`.
 - [x] Database schema & Liquibase migrations
 - [x] JPA entities
 - [x] Repositories
-- [ ] Authentication & authorization (JWT, roles)
+- [x] Authentication & authorization (JWT, roles)
 - [ ] Booking business logic
 - [ ] REST endpoints
 - [ ] Swagger documentation
