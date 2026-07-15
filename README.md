@@ -8,6 +8,10 @@ Administrators manage the whole system.
 
 > This project is under active development. This README will be updated as new features land.
 
+> **For AI agents / continuing developers:** read [`PROJECT_STATUS.md`](./PROJECT_STATUS.md)
+> first — it tracks exactly what's implemented, what's not, and known gotchas.
+> Keep it updated after any change.
+
 ## Tech Stack
 
 - **Java 17**
