@@ -154,7 +154,7 @@ Coverage report will be generated at `target/site/jacoco/index.html`.
 - [x] Dynamic pricing via Strategy pattern (weekend surcharge)
 - [x] AOP logging aspect for the service layer
 - [x] Swagger "Authorize" button (Bearer JWT security scheme)
-- [ ] Cancellation policy (free up to N days before check-in, penalty otherwise)
+- [x] Cancellation policy (free up to N days before check-in, penalty otherwise)
 - [ ] Unit & integration tests (80%+ coverage)
 
 ## License
