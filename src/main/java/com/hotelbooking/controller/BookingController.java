@@ -49,4 +49,14 @@ public class BookingController {
         bookingService.cancel(id, currentUser);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/complete")
+    @Operation(summary = "Mark a CONFIRMED, past-checkout booking as COMPLETED (hotel owner or ADMIN only)")
+    public ResponseEntity<Void> complete(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserPrincipal currentUser
+    ) {
+        bookingService.complete(id, currentUser);
+        return ResponseEntity.noContent().build();
+    }
 }

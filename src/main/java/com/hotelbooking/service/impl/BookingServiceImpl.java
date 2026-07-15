@@ -7,6 +7,7 @@ import com.hotelbooking.entity.Room;
 import com.hotelbooking.entity.enums.BookingStatus;
 import com.hotelbooking.entity.enums.Role;
 import com.hotelbooking.exception.BookingAlreadyCancelledException;
+import com.hotelbooking.exception.BookingNotCompletableException;
 import com.hotelbooking.exception.ForbiddenOperationException;
 import com.hotelbooking.exception.InvalidBookingDatesException;
 import com.hotelbooking.exception.ResourceNotFoundException;
@@ -105,6 +106,37 @@ public class BookingServiceImpl implements BookingService {
         booking.setStatus(BookingStatus.CANCELLED);
         booking.setCancellationFee(fee);
         booking.setCancelledAt(LocalDateTime.now());
+        bookingRepository.save(booking);
+    }
+
+    @Override
+    @Transactional
+    public void complete(Long bookingId, UserPrincipal currentUser) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + bookingId));
+
+        boolean isAdmin = currentUser.getUser().getRole() == Role.ADMIN;
+        boolean isHotelOwner = booking.getRoom().getRoomType().getHotel().getOwner().getId()
+                .equals(currentUser.getUser().getId());
+
+        if (!isAdmin && !isHotelOwner) {
+            throw new ForbiddenOperationException(
+                    "Only the hotel owner or an ADMIN can mark a booking as completed");
+        }
+
+        if (booking.getStatus() != BookingStatus.CONFIRMED) {
+            throw new BookingNotCompletableException(
+                    "Booking " + booking.getId() + " is " + booking.getStatus().name().toLowerCase()
+                            + ", only a CONFIRMED booking can be completed");
+        }
+
+        if (LocalDate.now().isBefore(booking.getCheckOut())) {
+            throw new BookingNotCompletableException(
+                    "Booking " + booking.getId() + " cannot be completed before its check-out date ("
+                            + booking.getCheckOut() + ")");
+        }
+
+        booking.setStatus(BookingStatus.COMPLETED);
         bookingRepository.save(booking);
     }
 
