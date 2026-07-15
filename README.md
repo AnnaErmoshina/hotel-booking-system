@@ -114,6 +114,13 @@ Authorization: Bearer <token>
 | GET | `/api/bookings/my` | List my bookings | Authenticated |
 | PATCH | `/api/bookings/{id}/cancel` | Cancel a booking | Owner or ADMIN |
 
+## Manual Testing Tool
+
+`tools/api-tester.html` is a single, dependency-free HTML page for manually exercising every
+endpoint (register/login, hotels, room types, rooms, bookings) without touching Swagger or curl.
+Just open the file directly in a browser while the app is running via Docker Compose — no build
+step needed. It is a convenience tool only, not part of the graded REST API itself.
+
 ## Running Tests
 
 ```bash

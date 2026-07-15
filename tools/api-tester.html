@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hotel Booking System — API Tester</title>
+<style>
+    :root {
+        --bg: #f4f6f8;
+        --card: #ffffff;
+        --border: #e0e4e8;
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --text: #1f2937;
+        --muted: #6b7280;
+        --success: #16a34a;
+        --error: #dc2626;
+    }
+    * { box-sizing: border-box; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        margin: 0;
+        padding: 24px;
+    }
+    h1 { font-size: 22px; margin-bottom: 4px; }
+    .subtitle { color: var(--muted); margin-bottom: 20px; font-size: 14px; }
+    .top-bar {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    .top-bar label { font-size: 13px; color: var(--muted); }
+    .top-bar input { flex: 1; min-width: 200px; }
+    .session {
+        font-size: 13px;
+        padding: 6px 10px;
+        border-radius: 6px;
+        background: #eef2ff;
+        color: #3730a3;
+    }
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+        gap: 16px;
+    }
+    .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px;
+    }
+    .card h2 {
+        font-size: 16px;
+        margin: 0 0 12px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .badge {
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-weight: 600;
+    }
+    .badge.public { background: #dcfce7; color: #166534; }
+    .badge.auth { background: #fef3c7; color: #92400e; }
+    .badge.role { background: #fee2e2; color: #991b1b; }
+    form { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+    .row { display: flex; gap: 8px; }
+    .row > * { flex: 1; }
+    input, textarea {
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 13px;
+        width: 100%;
+        font-family: inherit;
+    }
+    button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 9px 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+    button:hover { background: var(--primary-dark); }
+    button.secondary {
+        background: white;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+    }
+    button.secondary:hover { background: #eff6ff; }
+    pre {
+        background: #0f172a;
+        color: #e2e8f0;
+        padding: 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        overflow-x: auto;
+        max-height: 220px;
+        overflow-y: auto;
+        margin: 8px 0 0 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    .status-ok { color: #4ade80; }
+    .status-err { color: #f87171; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+</style>
+</head>
+<body>
+
+<h1>🏨 Hotel Booking System — API Tester</h1>
+<div class="subtitle">Плоская HTML-страница для ручной проверки эндпоинтов. Не часть дипломного REST API — просто инструмент.</div>
+
+<div class="top-bar">
+    <label for="baseUrl">API URL:</label>
+    <input id="baseUrl" value="http://localhost:8080">
+    <span class="session" id="sessionInfo">Не авторизован</span>
+</div>
+
+<div class="grid">
+
+    <!-- AUTH -->
+    <div class="card">
+        <h2>Аутентификация <span class="badge public">открыто всем</span></h2>
+        <form id="registerForm">
+            <div class="row">
+                <input name="firstName" placeholder="Имя" required>
+                <input name="lastName" placeholder="Фамилия" required>
+            </div>
+            <input name="email" type="email" placeholder="email@example.com" required>
+            <input name="password" type="password" placeholder="Пароль (мин. 8 символов)" required>
+            <button type="submit">Зарегистрироваться</button>
+        </form>
+        <hr>
+        <form id="loginForm">
+            <input name="email" type="email" placeholder="email@example.com" required>
+            <input name="password" type="password" placeholder="Пароль" required>
+            <button type="submit">Войти</button>
+        </form>
+        <pre id="authOutput">Ответ появится здесь</pre>
+    </div>
+
+    <!-- HOTELS -->
+    <div class="card">
+        <h2>Отели <span class="badge public">GET открыт</span><span class="badge role">POST: HOTEL_MANAGER/ADMIN</span></h2>
+        <div class="row">
+            <input id="hotelCity" placeholder="Город, например Paris">
+            <button class="secondary" onclick="listHotels()">Список</button>
+        </div>
+        <hr>
+        <form id="hotelForm">
+            <input name="name" placeholder="Название отеля" required>
+            <textarea name="description" placeholder="Описание" rows="2"></textarea>
+            <input name="address" placeholder="Адрес" required>
+            <div class="row">
+                <input name="city" placeholder="Город" required>
+                <input name="country" placeholder="Страна" required>
+            </div>
+            <button type="submit">Создать отель</button>
+        </form>
+        <pre id="hotelOutput">Ответ появится здесь</pre>
+    </div>
+
+    <!-- ROOM TYPES -->
+    <div class="card">
+        <h2>Типы номеров <span class="badge public">GET открыт</span><span class="badge role">POST: владелец/ADMIN</span></h2>
+        <div class="row">
+            <input id="roomTypeHotelId" placeholder="ID отеля" type="number">
+            <button class="secondary" onclick="listRoomTypes()">Список</button>
+        </div>
+        <hr>
+        <form id="roomTypeForm">
+            <input name="hotelId" placeholder="ID отеля" type="number" required>
+            <input name="name" placeholder="Название (Standard, Deluxe...)" required>
+            <textarea name="description" placeholder="Описание" rows="2"></textarea>
+            <div class="row">
+                <input name="basePrice" placeholder="Цена за ночь" type="number" step="0.01" required>
+                <input name="capacity" placeholder="Вместимость" type="number" required>
+            </div>
+            <button type="submit">Создать тип номера</button>
+        </form>
+        <pre id="roomTypeOutput">Ответ появится здесь</pre>
+    </div>
+
+    <!-- ROOMS -->
+    <div class="card">
+        <h2>Номера <span class="badge public">GET открыт</span><span class="badge role">POST: владелец/ADMIN</span></h2>
+        <div class="row">
+            <input id="roomRoomTypeId" placeholder="ID типа номера" type="number">
+            <button class="secondary" onclick="listRooms()">Список</button>
+        </div>
+        <hr>
+        <form id="roomForm">
+            <input name="roomTypeId" placeholder="ID типа номера" type="number" required>
+            <div class="row">
+                <input name="roomNumber" placeholder="Номер комнаты, напр. 101" required>
+                <input name="floor" placeholder="Этаж" type="number">
+            </div>
+            <button type="submit">Добавить номер</button>
+        </form>
+        <pre id="roomOutput">Ответ появится здесь</pre>
+    </div>
+
+    <!-- BOOKINGS -->
+    <div class="card">
+        <h2>Бронирования <span class="badge auth">нужен вход</span></h2>
+        <form id="bookingForm">
+            <input name="roomId" placeholder="ID номера" type="number" required>
+            <div class="row">
+                <input name="checkIn" type="date" required>
+                <input name="checkOut" type="date" required>
+            </div>
+            <button type="submit">Забронировать</button>
+        </form>
+        <div class="row" style="margin-top:8px">
+            <button class="secondary" onclick="myBookings()">Мои брони</button>
+            <input id="cancelBookingId" placeholder="ID брони для отмены" type="number">
+            <button class="secondary" onclick="cancelBooking()">Отменить</button>
+        </div>
+        <pre id="bookingOutput">Ответ появится здесь</pre>
+    </div>
+
+</div>
+
+<script>
+    let token = null;
+    let currentRole = null;
+    let currentEmail = null;
+
+    function baseUrl() {
+        return document.getElementById('baseUrl').value.replace(/\/$/, '');
+    }
+
+    function updateSession() {
+        const el = document.getElementById('sessionInfo');
+        el.textContent = token ? `${currentEmail} (${currentRole})` : 'Не авторизован';
+    }
+
+    async function callApi(method, path, body, requiresAuth) {
+        const headers = { 'Content-Type': 'application/json' };
+        if (requiresAuth && token) headers['Authorization'] = 'Bearer ' + token;
+
+        const response = await fetch(baseUrl() + path, {
+            method,
+            headers,
+            body: body ? JSON.stringify(body) : undefined
+        });
+
+        let data;
+        const text = await response.text();
+        try { data = text ? JSON.parse(text) : {}; } catch { data = text; }
+
+        return { ok: response.ok, status: response.status, data };
+    }
+
+    function render(outputId, result) {
+        const el = document.getElementById(outputId);
+        const cls = result.ok ? 'status-ok' : 'status-err';
+        el.innerHTML = `<span class="${cls}">Status: ${result.status}</span>\n` +
+            JSON.stringify(result.data, null, 2);
+    }
+
+    function formToObject(form) {
+        const data = Object.fromEntries(new FormData(form).entries());
+        for (const key in data) {
+            if (data[key] !== '' && !isNaN(data[key]) && form[key].type === 'number') {
+                data[key] = Number(data[key]);
+            }
+        }
+        return data;
+    }
+
+    // --- AUTH ---
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const result = await callApi('POST', '/api/auth/register', formToObject(e.target), false);
+        render('authOutput', result);
+        if (result.ok) applyAuthResult(result.data);
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const result = await callApi('POST', '/api/auth/login', formToObject(e.target), false);
+        render('authOutput', result);
+        if (result.ok) applyAuthResult(result.data);
+    });
+
+    function applyAuthResult(data) {
+        token = data.token;
+        currentRole = data.role;
+        currentEmail = data.email;
+        updateSession();
+    }
+
+    // --- HOTELS ---
+    async function listHotels() {
+        const city = document.getElementById('hotelCity').value || '';
+        const result = await callApi('GET', `/api/hotels?city=${encodeURIComponent(city)}`, null, false);
+        render('hotelOutput', result);
+    }
+
+    document.getElementById('hotelForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const result = await callApi('POST', '/api/hotels', formToObject(e.target), true);
+        render('hotelOutput', result);
+    });
+
+    // --- ROOM TYPES ---
+    async function listRoomTypes() {
+        const hotelId = document.getElementById('roomTypeHotelId').value;
+        const result = await callApi('GET', `/api/hotels/${hotelId}/room-types`, null, false);
+        render('roomTypeOutput', result);
+    }
+
+    document.getElementById('roomTypeForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const body = formToObject(e.target);
+        const hotelId = body.hotelId;
+        delete body.hotelId;
+        const result = await callApi('POST', `/api/hotels/${hotelId}/room-types`, body, true);
+        render('roomTypeOutput', result);
+    });
+
+    // --- ROOMS ---
+    async function listRooms() {
+        const roomTypeId = document.getElementById('roomRoomTypeId').value;
+        const result = await callApi('GET', `/api/room-types/${roomTypeId}/rooms`, null, false);
+        render('roomOutput', result);
+    }
+
+    document.getElementById('roomForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const body = formToObject(e.target);
+        const roomTypeId = body.roomTypeId;
+        delete body.roomTypeId;
+        const result = await callApi('POST', `/api/room-types/${roomTypeId}/rooms`, body, true);
+        render('roomOutput', result);
+    });
+
+    // --- BOOKINGS ---
+    document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const result = await callApi('POST', '/api/bookings', formToObject(e.target), true);
+        render('bookingOutput', result);
+    });
+
+    async function myBookings() {
+        const result = await callApi('GET', '/api/bookings/my', null, true);
+        render('bookingOutput', result);
+    }
+
+    async function cancelBooking() {
+        const id = document.getElementById('cancelBookingId').value;
+        const result = await callApi('PATCH', `/api/bookings/${id}/cancel`, null, true);
+        render('bookingOutput', result);
+    }
+</script>
+
+</body>
+</html>
