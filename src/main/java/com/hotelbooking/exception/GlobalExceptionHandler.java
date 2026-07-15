@@ -41,6 +41,13 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(HttpStatus.FORBIDDEN.value(), ex.getMessage()));
     }
 
+    @ExceptionHandler(BookingAlreadyCancelledException.class)
+    public ResponseEntity<ErrorResponse> handleBookingAlreadyCancelled(BookingAlreadyCancelledException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage()));
+    }
+
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
         return ResponseEntity

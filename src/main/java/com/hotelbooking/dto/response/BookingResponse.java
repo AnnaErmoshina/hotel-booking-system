@@ -9,6 +9,8 @@ public record BookingResponse(
         LocalDate checkIn,
         LocalDate checkOut,
         String status,
-        BigDecimal totalPrice
+        BigDecimal totalPrice,
+        // Null unless the booking was cancelled — set by CancellationPolicy.
+        BigDecimal cancellationFee
 ) {
 }

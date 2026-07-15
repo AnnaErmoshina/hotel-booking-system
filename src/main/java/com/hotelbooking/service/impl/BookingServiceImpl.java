@@ -6,6 +6,7 @@ import com.hotelbooking.entity.Booking;
 import com.hotelbooking.entity.Room;
 import com.hotelbooking.entity.enums.BookingStatus;
 import com.hotelbooking.entity.enums.Role;
+import com.hotelbooking.exception.BookingAlreadyCancelledException;
 import com.hotelbooking.exception.ForbiddenOperationException;
 import com.hotelbooking.exception.InvalidBookingDatesException;
 import com.hotelbooking.exception.ResourceNotFoundException;
@@ -14,12 +15,15 @@ import com.hotelbooking.repository.BookingRepository;
 import com.hotelbooking.repository.RoomRepository;
 import com.hotelbooking.security.UserPrincipal;
 import com.hotelbooking.service.BookingService;
+import com.hotelbooking.service.cancellation.CancellationPolicy;
 import com.hotelbooking.service.pricing.PricingStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -31,6 +35,9 @@ public class BookingServiceImpl implements BookingService {
     // Strategy pattern: which PricingStrategy bean gets injected here is the
     // only thing that decides how price is calculated — see service.pricing.
     private final PricingStrategy pricingStrategy;
+    // Strategy pattern: same idea as PricingStrategy above, for the
+    // cancel-side of a booking's lifecycle — see service.cancellation.
+    private final CancellationPolicy cancellationPolicy;
 
     @Override
     @Transactional
@@ -86,7 +93,18 @@ public class BookingServiceImpl implements BookingService {
             throw new ForbiddenOperationException("You do not have permission to cancel this booking");
         }
 
+        if (booking.getStatus() == BookingStatus.CANCELLED || booking.getStatus() == BookingStatus.COMPLETED) {
+            throw new BookingAlreadyCancelledException(
+                    "Booking " + booking.getId() + " is already " + booking.getStatus().name().toLowerCase());
+        }
+
+        // Strategy pattern: DeadlineCancellationPolicy (default) charges a
+        // penalty if we're cancelling too close to check-in, otherwise 0.
+        BigDecimal fee = cancellationPolicy.calculateFee(booking, LocalDate.now());
+
         booking.setStatus(BookingStatus.CANCELLED);
+        booking.setCancellationFee(fee);
+        booking.setCancelledAt(LocalDateTime.now());
         bookingRepository.save(booking);
     }
 
@@ -97,7 +115,8 @@ public class BookingServiceImpl implements BookingService {
                 booking.getCheckIn(),
                 booking.getCheckOut(),
                 booking.getStatus().name(),
-                booking.getTotalPrice()
+                booking.getTotalPrice(),
+                booking.getCancellationFee()
         );
     }
 }
