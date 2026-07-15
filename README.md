@@ -117,6 +117,12 @@ Authorization: Bearer <token>
 | POST | `/api/bookings` | Book a room | Authenticated |
 | GET | `/api/bookings/my` | List my bookings | Authenticated |
 | PATCH | `/api/bookings/{id}/cancel` | Cancel a booking | Owner or ADMIN |
+| PATCH | `/api/admin/users/{id}/role` | Change a user's role | ADMIN |
+
+A single ADMIN account is created automatically on first startup (see `app.admin.*` in
+`application.yml` / `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env.example`) — log in with it and
+promote other users to `HOTEL_MANAGER` or `ADMIN` via the endpoint above instead of editing the
+database by hand.
 
 ## Manual Testing Tool
 
