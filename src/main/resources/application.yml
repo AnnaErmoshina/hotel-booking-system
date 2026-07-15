@@ -38,6 +38,12 @@ jwt:
   expiration-ms: ${JWT_EXPIRATION_MS:86400000}
 
 app:
+  booking:
+    # DeadlineCancellationPolicy (service/cancellation) settings.
+    # Cancelling >= this many days before check-in is free.
+    free-cancellation-days: ${FREE_CANCELLATION_DAYS:2}
+    # Otherwise the fee is this % of the booking's total price.
+    late-cancellation-penalty-percent: ${LATE_CANCELLATION_PENALTY_PERCENT:50}
   admin:
     # First ADMIN account, created on startup by AdminSeeder if it doesn't
     # exist yet. Override before any real deployment.
