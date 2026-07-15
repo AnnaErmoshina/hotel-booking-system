@@ -117,6 +117,7 @@ Authorization: Bearer <token>
 | POST | `/api/bookings` | Book a room | Authenticated |
 | GET | `/api/bookings/my` | List my bookings | Authenticated |
 | PATCH | `/api/bookings/{id}/cancel` | Cancel a booking | Owner or ADMIN |
+| POST | `/api/payments` | Pay for a booking in full (confirms it) | Owner or ADMIN |
 | PATCH | `/api/admin/users/{id}/role` | Change a user's role | ADMIN |
 
 A single ADMIN account is created automatically on first startup (see `app.admin.*` in
@@ -155,6 +156,7 @@ Coverage report will be generated at `target/site/jacoco/index.html`.
 - [x] AOP logging aspect for the service layer
 - [x] Swagger "Authorize" button (Bearer JWT security scheme)
 - [x] Cancellation policy (free up to N days before check-in, penalty otherwise)
+- [x] Payments (confirms a booking on successful payment)
 - [ ] Unit & integration tests (80%+ coverage)
 
 ## License

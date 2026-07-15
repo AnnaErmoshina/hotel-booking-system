@@ -232,6 +232,8 @@ bean — см. TODO 6.2).
 13. Merge feature/pricing-strategy     → PricingStrategy (Strategy pattern), TODO 6.1 частично закрыт
 14. docs: update PROJECT_STATUS.md and README after this session's changes
 15. Merge feature/cancellation-policy  → CancellationPolicy (Strategy pattern), TODO 6.1 закрыт полностью
+16. docs: update PROJECT_STATUS.md and README for cancellation policy
+17. Merge feature/payments            → Payment Service+Controller, CONFIRMED transition, TODO 6.4/6.5 частично закрыты
 ```
 
 Пункты 10-13 сделаны агентом в отдельной сессии, без доступа к сети
@@ -317,8 +319,8 @@ bean — см. TODO 6.2).
   строка `Seeded initial ADMIN user ...`), залогиниться этим
   аккаунтом и вызвать `PATCH /api/admin/users/{id}/role`.
 
-### 6.4 Amenity / Review / Payment — Entity+Repository есть, Service+Controller НЕТ
-Три сущности из 9 таблиц не имеют бизнес-логики и REST-эндпоинтов:
+### 6.4 Amenity / Review — Entity+Repository есть, Service+Controller НЕТ; Payment — ЗАКРЫТО
+Было три сущности без бизнес-логики, теперь осталось две:
 - `Amenity` — нет способа создать удобство или привязать к `RoomType`
   через API (сущность `RoomType.amenities` как `@ManyToMany` есть в
   коде, но ничего её не наполняет)
@@ -326,15 +328,23 @@ bean — см. TODO 6.2).
   `ReviewRepository.findAverageRatingByHotelId` уже готов и ждёт
   использования — это была задумка для автоматического пересчёта
   рейтинга отеля)
-- `Payment` — нет эндпоинта "оплатить бронь" (по смыслу должен менять
-  `Booking.status` на `CONFIRMED` после успешной оплаты — этой связки
-  тоже нет)
+- ~~`Payment`~~ — ✅ **закрыто** в ветке `feature/payments`:
+  `POST /api/payments` (владелец брони или ADMIN) создаёт `Payment` со
+  статусом `PAID` на всю сумму `booking.totalPrice` и переводит
+  `Booking.status` в `CONFIRMED`. Повторная оплата или оплата брони не
+  в статусе `PENDING` — `InvalidPaymentStateException` (409). Частичная
+  оплата/несколько платежей на бронь не предусмотрены (в схеме БД
+  `payments.booking_id` уникален — 1:1). **Не проверено вживую**, см. 6.9.
 
-### 6.5 Переходы статуса бронирования — НЕ РЕАЛИЗОВАНО
-`BookingStatus` enum содержит `PENDING, CONFIRMED, CANCELLED, COMPLETED`,
-но код умеет проставлять только `PENDING` (при создании) и `CANCELLED`
-(при отмене). Переходы в `CONFIRMED` (после оплаты) и `COMPLETED`
-(после выезда) нигде не реализованы.
+### 6.5 Переходы статуса бронирования — ЧАСТИЧНО ЗАКРЫТО
+`BookingStatus` enum содержит `PENDING, CONFIRMED, CANCELLED, COMPLETED`.
+Реализовано: `PENDING` (создание), `CANCELLED` (отмена, `POST
+/api/bookings/{id}/cancel`), и теперь `CONFIRMED` (успешная оплата,
+`POST /api/payments`, см. 6.4). Переход в `COMPLETED` (после
+фактического выезда/окончания даты `checkOut`) по-прежнему нигде не
+реализован — нужен либо ручной эндпоинт (ADMIN/владелец отеля отмечает
+бронь завершённой), либо scheduled job, который проверяет `checkOut <
+today` для `CONFIRMED`-броней. Не начато.
 
 ### 6.6 Тесты — 0% ПОКРЫТИЯ, ТРЕБУЕТСЯ 80%+ ПО ТЗ КУРСА
 Зависимости (JUnit 5, Mockito, Testcontainers, spring-security-test,
@@ -470,15 +480,15 @@ OpenAPI, README на английском.
 
 **Главные незакрытые риски перед сдачей, по убыванию критичности:**
 1. Тесты (0% против требуемых 80%+) — TODO 6.6, **самый большой риск,
-   всё ещё не тронут** (сознательно откладывается уже вторую сессию —
+   всё ещё не тронут** (сознательно откладывается уже третью сессию —
    см. раздел 10)
-2. Ничего из кода двух последних сессий не скомпилировано и не
+2. Ничего из кода последних трёх сессий не скомпилировано и не
    запущено живьём (TODO 6.9) — первым делом при следующем доступе к
    Maven/Docker, включая миграцию 010
-3. `Amenity`/`Review`/`Payment` без Service/Controller (TODO 6.4) —
-   3 из 9 таблиц без бизнес-логики
-4. Переходы статуса брони в `CONFIRMED`/`COMPLETED` не реализованы
-   (TODO 6.5)
+3. `Amenity`/`Review` без Service/Controller (TODO 6.4, `Payment`
+   теперь закрыт)
+4. Переход брони в `COMPLETED` не реализован (TODO 6.5, `CONFIRMED`
+   теперь закрыт через оплату)
 
 ---
 
@@ -498,6 +508,14 @@ AOP, Swagger Bearer-кнопка, `PricingStrategy` — 4 фичи, см. ист
 (усиливает TODO 6.7 для презентации) и не требует новых
 контроллеров/DTO с нуля (только правка существующего
 `BookingServiceImpl.cancel()`).
+
+**Эта сессия (снова быстрая, экономим токены):** после политики отмены
+взялась за `feature/payments` — тоже маленький по объёму, но закрывает
+сразу два TODO одним ходом: Payment получил Service+Controller (TODO
+6.4) и появился первый реальный переход статуса брони в `CONFIRMED`
+(TODO 6.5). `Amenity`/`Review` и переход в `COMPLETED` осознанно не
+трогались — каждый из них самостоятельная фича того же размера, но
+сессия уже не маленькая, если делать все сразу.
 
 Тесты (TODO 6.6) снова осознанно оставлены следующей сессии — по-прежнему
 единственный пункт, который реально требует много времени (unit-тесты
