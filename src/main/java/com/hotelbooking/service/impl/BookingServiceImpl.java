@@ -14,12 +14,12 @@ import com.hotelbooking.repository.BookingRepository;
 import com.hotelbooking.repository.RoomRepository;
 import com.hotelbooking.security.UserPrincipal;
 import com.hotelbooking.service.BookingService;
+import com.hotelbooking.service.pricing.PricingStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -28,6 +28,9 @@ public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
     private final RoomRepository roomRepository;
+    // Strategy pattern: which PricingStrategy bean gets injected here is the
+    // only thing that decides how price is calculated — see service.pricing.
+    private final PricingStrategy pricingStrategy;
 
     @Override
     @Transactional
@@ -48,8 +51,7 @@ public class BookingServiceImpl implements BookingService {
                     "Room " + room.getRoomNumber() + " is not available for the selected dates");
         }
 
-        long nights = ChronoUnit.DAYS.between(request.checkIn(), request.checkOut());
-        BigDecimal totalPrice = room.getRoomType().getBasePrice().multiply(BigDecimal.valueOf(nights));
+        BigDecimal totalPrice = pricingStrategy.calculatePrice(room, request.checkIn(), request.checkOut());
 
         Booking booking = Booking.builder()
                 .user(currentUser.getUser())
