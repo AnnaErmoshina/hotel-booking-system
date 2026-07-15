@@ -234,6 +234,8 @@ bean — см. TODO 6.2).
 15. Merge feature/cancellation-policy  → CancellationPolicy (Strategy pattern), TODO 6.1 закрыт полностью
 16. docs: update PROJECT_STATUS.md and README for cancellation policy
 17. Merge feature/payments            → Payment Service+Controller, CONFIRMED transition, TODO 6.4/6.5 частично закрыты
+18. docs: update PROJECT_STATUS.md and README for payments
+19. Merge feature/booking-completion   → COMPLETED transition (owner отеля/ADMIN), TODO 6.5 закрыт полностью
 ```
 
 Пункты 10-13 сделаны агентом в отдельной сессии, без доступа к сети
@@ -336,15 +338,16 @@ bean — см. TODO 6.2).
   оплата/несколько платежей на бронь не предусмотрены (в схеме БД
   `payments.booking_id` уникален — 1:1). **Не проверено вживую**, см. 6.9.
 
-### 6.5 Переходы статуса бронирования — ЧАСТИЧНО ЗАКРЫТО
+### 6.5 Переходы статуса бронирования — ЗАКРЫТО
 `BookingStatus` enum содержит `PENDING, CONFIRMED, CANCELLED, COMPLETED`.
-Реализовано: `PENDING` (создание), `CANCELLED` (отмена, `POST
-/api/bookings/{id}/cancel`), и теперь `CONFIRMED` (успешная оплата,
-`POST /api/payments`, см. 6.4). Переход в `COMPLETED` (после
-фактического выезда/окончания даты `checkOut`) по-прежнему нигде не
-реализован — нужен либо ручной эндпоинт (ADMIN/владелец отеля отмечает
-бронь завершённой), либо scheduled job, который проверяет `checkOut <
-today` для `CONFIRMED`-броней. Не начато.
+Все переходы реализованы: `PENDING` (создание), `CANCELLED` (отмена,
+`PATCH /api/bookings/{id}/cancel`), `CONFIRMED` (оплата, `POST
+/api/payments`, см. 6.4), и теперь `COMPLETED` — новый `PATCH
+/api/bookings/{id}/complete` в ветке `feature/booking-completion`:
+доступен владельцу отеля (цепочка `booking.room.roomType.hotel.owner`)
+или `ADMIN`, и только для брони в статусе `CONFIRMED`, у которой
+`checkOut` уже наступил — иначе `BookingNotCompletableException` (409).
+Новых колонок в БД не потребовалось. **Не проверено вживую**, см. 6.9.
 
 ### 6.6 Тесты — 0% ПОКРЫТИЯ, ТРЕБУЕТСЯ 80%+ ПО ТЗ КУРСА
 Зависимости (JUnit 5, Mockito, Testcontainers, spring-security-test,
@@ -516,6 +519,14 @@ AOP, Swagger Bearer-кнопка, `PricingStrategy` — 4 фичи, см. ист
 (TODO 6.5). `Amenity`/`Review` и переход в `COMPLETED` осознанно не
 трогались — каждый из них самостоятельная фича того же размера, но
 сессия уже не маленькая, если делать все сразу.
+
+**Эта сессия (продолжение, снова экономим токены):** закрыла последний
+кусок TODO 6.5 — `feature/booking-completion`, переход брони в
+`COMPLETED`. Выбор снова пал на самый маленький по объёму код: не
+новая сущность, а один метод в `BookingServiceImpl` + один эндпоинт +
+одно новое исключение, без миграции БД. `Amenity`/`Review`
+по-прежнему не тронуты — они требуют полноценного слоя
+Service+Controller с нуля, это отдельная, более объёмная сессия.
 
 Тесты (TODO 6.6) снова осознанно оставлены следующей сессии — по-прежнему
 единственный пункт, который реально требует много времени (unit-тесты
