@@ -117,11 +117,19 @@ Authorization: Bearer <token>
 | POST | `/api/bookings` | Book a room | Authenticated |
 | GET | `/api/bookings/my` | List my bookings | Authenticated |
 | PATCH | `/api/bookings/{id}/cancel` | Cancel a booking | Owner or ADMIN |
+| GET | `/api/admin/users` | List all users | ADMIN |
+| PATCH | `/api/admin/users/{id}/role` | Change a user's role | ADMIN |
+
+A seed migration creates one initial admin account (`admin@hotelbooking.local` /
+`Admin123!`, dev/demo credentials only) so there is always a way in to promote other
+users to `HOTEL_MANAGER` or `ADMIN` without touching the database by hand.
 
 ## Manual Testing Tool
 
+
 `tools/api-tester.html` is a single, dependency-free HTML page for manually exercising every
-endpoint (register/login, hotels, room types, rooms, bookings) without touching Swagger or curl.
+endpoint (register/login, admin/users, hotels, room types, rooms, bookings) without touching
+Swagger or curl.
 Just open the file directly in a browser while the app is running via Docker Compose — no build
 step needed. It is a convenience tool only, not part of the graded REST API itself.
 
@@ -144,7 +152,9 @@ Coverage report will be generated at `target/site/jacoco/index.html`.
 - [x] Authentication & authorization (JWT, roles)
 - [x] Booking business logic (date-overlap validation, price calculation)
 - [x] REST endpoints (hotels, room types, rooms, bookings)
-- [ ] Swagger documentation polish (tags are in, descriptions could grow)
+- [x] Admin user role management (`/api/admin/users`) + seeded first admin
+- [ ] Swagger documentation polish (tags are in, descriptions could grow;
+      Bearer auth scheme not yet wired into Swagger UI)
 - [ ] Unit & integration tests (80%+ coverage)
 
 ## License
