@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.26.xsd">
+
+    <!--
+        Seeds the very first ADMIN user, so there is at least one account able
+        to promote other users via PATCH /api/admin/users/{id}/role without
+        anyone having to touch the database with a SQL client by hand.
+
+        Credentials (dev/demo only, rotate or remove before any real deployment):
+            email:    admin@hotelbooking.local
+            password: Admin123!
+
+        The password hash below is a BCrypt hash (strength 10, same as
+        SecurityConfig#passwordEncoder) of "Admin123!". It was generated once,
+        offline, and pasted here as a literal — this changeSet must never be
+        edited after it has run against a real database (see PROJECT_STATUS.md,
+        section 3: migrations 001-010 are append-only once applied).
+    -->
+    <changeSet id="010-seed-admin-user" author="hotel-booking-team">
+        <insert tableName="users">
+            <column name="first_name" value="System"/>
+            <column name="last_name" value="Admin"/>
+            <column name="email" value="admin@hotelbooking.local"/>
+            <column name="password_hash" value="$2b$10$iDzNzPJAnHRmmZXiGTfVy.ypw53L3dOuI1LE20UFNqjRn68Tyxnqu"/>
+            <column name="role" value="ADMIN"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
