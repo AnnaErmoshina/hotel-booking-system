@@ -150,7 +150,7 @@ Coverage report will be generated at `target/site/jacoco/index.html`.
 - [x] Authentication & authorization (JWT, roles)
 - [x] Booking business logic (date-overlap validation, price calculation)
 - [x] REST endpoints (hotels, room types, rooms, bookings)
-- [ ] Swagger documentation polish (tags are in, descriptions could grow)
+- [x] Swagger "Authorize" button (Bearer JWT security scheme)
 - [ ] Unit & integration tests (80%+ coverage)
 
 ## License
