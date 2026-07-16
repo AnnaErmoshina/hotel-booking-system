@@ -299,6 +299,17 @@ function renderAuthBox() {
   } else {
     box.innerHTML = `<button class="btn small" onclick="showView('auth')">Войти / Регистрация</button>`;
   }
+  renderNav();
+}
+
+// Shows/hides nav tabs that don't apply to the current user: "Мои брони"
+// needs any login, "Управление" needs HOTEL_MANAGER/ADMIN, "Админ" needs ADMIN.
+function renderNav() {
+  const isManager = state.role === 'HOTEL_MANAGER' || state.role === 'ADMIN';
+  const isAdmin = state.role === 'ADMIN';
+  document.querySelector('#mainNav button[data-view="bookings"]').classList.toggle('section-hidden', !state.token);
+  document.querySelector('#mainNav button[data-view="manage"]').classList.toggle('section-hidden', !isManager);
+  document.querySelector('#mainNav button[data-view="admin"]').classList.toggle('section-hidden', !isAdmin);
 }
 
 function saveAuth(resp) {
@@ -315,6 +326,7 @@ function logout() {
   state.token = null; state.email = null; state.role = null;
   localStorage.removeItem('hb_token'); localStorage.removeItem('hb_email'); localStorage.removeItem('hb_role');
   renderAuthBox();
+  showView('browse');
   toast('Вы вышли из аккаунта');
 }
 
@@ -340,6 +352,12 @@ async function doRegister() {
 
 // ---------- nav ----------
 function showView(name) {
+  const navBtn0 = document.querySelector(`#mainNav button[data-view="${name}"]`);
+  if (navBtn0 && navBtn0.classList.contains('section-hidden')) {
+    // Tab isn't available for the current role (e.g. logged out, or lost
+    // manager/admin rights) — fall back instead of showing an empty screen.
+    name = 'browse';
+  }
   document.querySelectorAll('#mainNav button').forEach(b => b.classList.remove('active'));
   const navBtn = document.querySelector(`#mainNav button[data-view="${name}"]`);
   if (navBtn) navBtn.classList.add('active');
