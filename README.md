@@ -120,6 +120,13 @@ Authorization: Bearer <token>
 | POST | `/api/payments` | Pay for a booking in full (confirms it) | Owner or ADMIN |
 | PATCH | `/api/bookings/{id}/complete` | Mark a past-checkout booking completed | Hotel owner or ADMIN |
 | PATCH | `/api/admin/users/{id}/role` | Change a user's role | ADMIN |
+| GET | `/api/amenities` | List all amenities | No |
+| POST | `/api/amenities` | Create an amenity | HOTEL_MANAGER, ADMIN |
+| GET | `/api/room-types/{roomTypeId}/amenities` | List amenities of a room type | No |
+| POST | `/api/room-types/{roomTypeId}/amenities/{amenityId}` | Attach an amenity to a room type | Hotel owner or ADMIN |
+| POST | `/api/bookings/{bookingId}/reviews` | Leave a review for a COMPLETED booking | Owner of the booking |
+| GET | `/api/hotels/{hotelId}/reviews` | List reviews for a hotel | No |
+| GET | `/api/hotels/{hotelId}/rating` | Average rating + review count for a hotel | No |
 
 A single ADMIN account is created automatically on first startup (see `app.admin.*` in
 `application.yml` / `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env.example`) — log in with it and
@@ -159,6 +166,8 @@ Coverage report will be generated at `target/site/jacoco/index.html`.
 - [x] Cancellation policy (free up to N days before check-in, penalty otherwise)
 - [x] Payments (confirms a booking on successful payment)
 - [x] Booking lifecycle complete (PENDING → CONFIRMED → COMPLETED, or CANCELLED)
+- [x] Amenities (catalog + attach to room types)
+- [x] Reviews (leave a review for a completed booking, hotel rating)
 - [ ] Unit & integration tests (80%+ coverage)
 
 ## License
