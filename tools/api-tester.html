@@ -226,10 +226,57 @@
         </form>
         <div class="row" style="margin-top:8px">
             <button class="secondary" onclick="myBookings()">Мои брони</button>
-            <input id="cancelBookingId" placeholder="ID брони для отмены" type="number">
+            <input id="cancelBookingId" placeholder="ID брони" type="number">
             <button class="secondary" onclick="cancelBooking()">Отменить</button>
         </div>
+        <div class="row" style="margin-top:8px">
+            <input id="completeBookingId" placeholder="ID брони" type="number">
+            <button class="secondary" onclick="completeBooking()">Завершить (COMPLETED)</button>
+        </div>
+        <div style="font-size:11px; color:var(--muted); margin-top:4px">
+            Отмена: владелец брони или ADMIN, штраф считается по CancellationPolicy.
+            Завершить может владелец отеля или ADMIN, и только после checkOut.
+        </div>
         <pre id="bookingOutput">Ответ появится здесь</pre>
+    </div>
+
+    <!-- PAYMENTS -->
+    <div class="card">
+        <h2>Оплата <span class="badge auth">нужен вход</span></h2>
+        <div style="font-size:12px; color:var(--muted); margin-bottom:8px">
+            Оплата возможна только для брони в статусе PENDING, переводит её в CONFIRMED.
+        </div>
+        <form id="paymentForm">
+            <input name="bookingId" placeholder="ID брони" type="number" required>
+            <input name="paymentMethod" placeholder="Способ оплаты, напр. card" required>
+            <button type="submit">Оплатить</button>
+        </form>
+        <pre id="paymentOutput">Ответ появится здесь</pre>
+    </div>
+
+    <!-- ADMIN -->
+    <div class="card">
+        <h2>Админ <span class="badge role">только ADMIN</span></h2>
+        <div style="font-size:12px; color:var(--muted); margin-bottom:8px">
+            При первом запуске сервер сам создаёт админа — креды в
+            <code>app.admin.*</code> (application.yml) / переменных
+            <code>ADMIN_EMAIL</code> / <code>ADMIN_PASSWORD</code> в .env
+            (по умолчанию <code>admin@hotelbooking.local</code> /
+            <code>ChangeMe123!</code>). Залогинься под ним выше, потом
+            меняй роли здесь по ID пользователя.
+        </div>
+        <form id="roleForm">
+            <div class="row">
+                <input name="userId" placeholder="ID пользователя" type="number" required>
+                <select name="role" required>
+                    <option value="USER">USER</option>
+                    <option value="HOTEL_MANAGER">HOTEL_MANAGER</option>
+                    <option value="ADMIN">ADMIN</option>
+                </select>
+            </div>
+            <button type="submit">Сменить роль</button>
+        </form>
+        <pre id="adminOutput">Ответ появится здесь</pre>
     </div>
 
 </div>
@@ -366,6 +413,29 @@
         const result = await callApi('PATCH', `/api/bookings/${id}/cancel`, null, true);
         render('bookingOutput', result);
     }
+
+    async function completeBooking() {
+        const id = document.getElementById('completeBookingId').value;
+        const result = await callApi('PATCH', `/api/bookings/${id}/complete`, null, true);
+        render('bookingOutput', result);
+    }
+
+    // --- PAYMENTS ---
+    document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const result = await callApi('POST', '/api/payments', formToObject(e.target), true);
+        render('paymentOutput', result);
+    });
+
+    // --- ADMIN ---
+    document.getElementById('roleForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const body = formToObject(e.target);
+        const userId = body.userId;
+        delete body.userId;
+        const result = await callApi('PATCH', `/api/admin/users/${userId}/role`, body, true);
+        render('adminOutput', result);
+    });
 </script>
 
 </body>
