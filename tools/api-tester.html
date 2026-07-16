@@ -194,6 +194,26 @@
         <pre id="roomTypeOutput">Ответ появится здесь</pre>
     </div>
 
+    <!-- AMENITIES -->
+    <div class="card">
+        <h2>Удобства <span class="badge public">GET открыт</span><span class="badge role">POST: HOTEL_MANAGER/ADMIN</span></h2>
+        <button class="secondary" onclick="listAmenities()">Список всех удобств</button>
+        <hr>
+        <form id="amenityForm">
+            <input name="name" placeholder="Название (Wi-Fi, Бассейн...)" required>
+            <button type="submit">Создать удобство</button>
+        </form>
+        <hr>
+        <form id="attachAmenityForm">
+            <div class="row">
+                <input name="roomTypeId" placeholder="ID типа номера" type="number" required>
+                <input name="amenityId" placeholder="ID удобства" type="number" required>
+            </div>
+            <button type="submit">Привязать удобство к типу номера</button>
+        </form>
+        <pre id="amenityOutput">Ответ появится здесь</pre>
+    </div>
+
     <!-- ROOMS -->
     <div class="card">
         <h2>Номера <span class="badge public">GET открыт</span><span class="badge role">POST: владелец/ADMIN</span></h2>
@@ -378,6 +398,25 @@
         delete body.hotelId;
         const result = await callApi('POST', `/api/hotels/${hotelId}/room-types`, body, true);
         render('roomTypeOutput', result);
+    });
+
+    // --- AMENITIES ---
+    async function listAmenities() {
+        const result = await callApi('GET', '/api/amenities', null, false);
+        render('amenityOutput', result);
+    }
+
+    document.getElementById('amenityForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const result = await callApi('POST', '/api/amenities', formToObject(e.target), true);
+        render('amenityOutput', result);
+    });
+
+    document.getElementById('attachAmenityForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const body = formToObject(e.target);
+        const result = await callApi('POST', `/api/room-types/${body.roomTypeId}/amenities/${body.amenityId}`, null, true);
+        render('amenityOutput', result);
     });
 
     // --- ROOMS ---
