@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hotel Booking</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --card: #ffffff;
+    --border: #e2e5ea;
+    --text: #1f2430;
+    --muted: #6b7280;
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --danger: #dc2626;
+    --success: #16a34a;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header h1 { font-size: 18px; margin: 0; margin-right: auto; }
+  nav { display: flex; gap: 6px; flex-wrap: wrap; }
+  nav button {
+    background: none; border: none; padding: 8px 12px; border-radius: 8px;
+    cursor: pointer; font-size: 14px; color: var(--muted);
+  }
+  nav button.active { background: var(--primary); color: white; }
+  #authBox { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+  #authBox button { padding: 6px 10px; }
+  main { max-width: 960px; margin: 0 auto; padding: 20px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px; margin-bottom: 14px;
+  }
+  .card h3 { margin-top: 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 8px 0 4px; }
+  input, select, textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 14px; font-family: inherit;
+  }
+  textarea { min-height: 60px; resize: vertical; }
+  button.btn {
+    background: var(--primary); color: white; border: none; padding: 9px 14px;
+    border-radius: 8px; cursor: pointer; font-size: 14px; margin-top: 10px;
+  }
+  button.btn:hover { background: var(--primary-dark); }
+  button.btn.secondary { background: #eef0f4; color: var(--text); }
+  button.btn.danger { background: var(--danger); }
+  button.btn.small { padding: 5px 10px; font-size: 12px; margin-top: 0; margin-right: 6px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  .row > div { flex: 1; min-width: 140px; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px;
+    background: #eef0f4; color: var(--muted);
+  }
+  .badge.PENDING { background: #fef3c7; color: #92400e; }
+  .badge.CONFIRMED { background: #dbeafe; color: #1e40af; }
+  .badge.COMPLETED { background: #dcfce7; color: #166534; }
+  .badge.CANCELLED { background: #fee2e2; color: #991b1b; }
+  #toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: #1f2430; color: white; padding: 10px 16px; border-radius: 8px;
+    font-size: 14px; display: none; max-width: 90%; z-index: 100;
+  }
+  #toast.error { background: var(--danger); }
+  #toast.success { background: var(--success); }
+  a.link { color: var(--primary); cursor: pointer; text-decoration: none; font-size: 13px; }
+  .section-hidden { display: none; }
+  .amenity-chip {
+    display: inline-block; background: #eef0f4; border-radius: 999px; padding: 2px 8px;
+    font-size: 12px; margin: 2px 4px 2px 0;
+  }
+  hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏨 Hotel Booking</h1>
+  <nav id="mainNav">
+    <button data-view="browse" class="active">Отели</button>
+    <button data-view="bookings">Мои брони</button>
+    <button data-view="manage">Управление</button>
+    <button data-view="admin">Админ</button>
+  </nav>
+  <div id="authBox"></div>
+</header>
+
+<main>
+  <div style="margin-bottom:14px">
+    <label>API адрес сервера</label>
+    <input id="apiBase" value="http://localhost:8080" style="max-width:320px">
+  </div>
+
+  <section id="view-auth" class="card section-hidden">
+    <h3>Вход / Регистрация</h3>
+    <div class="row">
+      <div>
+        <label>Email</label>
+        <input id="authEmail" type="email" placeholder="you@example.com">
+      </div>
+      <div>
+        <label>Пароль</label>
+        <input id="authPassword" type="password" placeholder="min 8 символов">
+      </div>
+    </div>
+    <div class="row" id="registerFields">
+      <div>
+        <label>Имя</label>
+        <input id="authFirstName">
+      </div>
+      <div>
+        <label>Фамилия</label>
+        <input id="authLastName">
+      </div>
+    </div>
+    <button class="btn" onclick="doLogin()">Войти</button>
+    <button class="btn secondary" onclick="doRegister()">Зарегистрироваться</button>
+  </section>
+
+  <section id="view-browse">
+    <div class="card">
+      <h3>Поиск отелей по городу</h3>
+      <div class="row">
+        <div>
+          <label>Город</label>
+          <input id="searchCity" placeholder="Например: Moscow">
+        </div>
+        <div style="flex:0">
+          <button class="btn" onclick="searchHotels()">Искать</button>
+        </div>
+      </div>
+    </div>
+    <div id="hotelsList" class="grid"></div>
+
+    <div id="hotelDetail"></div>
+  </section>
+
+  <section id="view-bookings" class="section-hidden">
+    <div class="card">
+      <h3>Мои бронирования</h3>
+      <a class="link" onclick="loadMyBookings()">↻ Обновить</a>
+      <div id="bookingsList" style="margin-top:10px"></div>
+    </div>
+  </section>
+
+  <section id="view-manage" class="section-hidden">
+    <div class="card">
+      <h3>Создать отель</h3>
+      <p class="muted">Доступно ролям HOTEL_MANAGER и ADMIN.</p>
+      <div class="grid">
+        <div><label>Название</label><input id="hName"></div>
+        <div><label>Город</label><input id="hCity"></div>
+        <div><label>Страна</label><input id="hCountry"></div>
+        <div><label>Адрес</label><input id="hAddress"></div>
+      </div>
+      <label>Описание</label><textarea id="hDescription"></textarea>
+      <button class="btn" onclick="createHotel()">Создать отель</button>
+    </div>
+
+    <div class="card">
+      <h3>Добавить тип номера</h3>
+      <div class="grid">
+        <div><label>ID отеля</label><input id="rtHotelId" type="number"></div>
+        <div><label>Название</label><input id="rtName" placeholder="Standard / Deluxe..."></div>
+        <div><label>Цена за ночь</label><input id="rtPrice" type="number" step="0.01"></div>
+        <div><label>Вместимость</label><input id="rtCapacity" type="number"></div>
+      </div>
+      <label>Описание</label><textarea id="rtDescription"></textarea>
+      <button class="btn" onclick="createRoomType()">Добавить тип номера</button>
+    </div>
+
+    <div class="card">
+      <h3>Добавить номер</h3>
+      <div class="grid">
+        <div><label>ID типа номера</label><input id="roomTypeId" type="number"></div>
+        <div><label>Номер комнаты</label><input id="roomNumber" placeholder="101"></div>
+        <div><label>Этаж</label><input id="roomFloor" type="number"></div>
+      </div>
+      <button class="btn" onclick="createRoom()">Добавить номер</button>
+    </div>
+
+    <div class="card">
+      <h3>Удобства (Amenities)</h3>
+      <div class="row">
+        <div><label>Новое удобство</label><input id="newAmenityName" placeholder="Wi-Fi, бассейн..."></div>
+        <div style="flex:0"><button class="btn" onclick="createAmenity()">Создать</button></div>
+      </div>
+      <hr>
+      <div class="row">
+        <div><label>ID типа номера</label><input id="attachRoomTypeId" type="number"></div>
+        <div><label>ID удобства</label><input id="attachAmenityId" type="number"></div>
+        <div style="flex:0"><button class="btn" onclick="attachAmenity()">Привязать</button></div>
+      </div>
+      <label>Все удобства</label>
+      <div id="amenitiesList"></div>
+    </div>
+  </section>
+
+  <section id="view-admin" class="section-hidden">
+    <div class="card">
+      <h3>Изменить роль пользователя</h3>
+      <p class="muted">Доступно только ADMIN. ID пользователя можно посмотреть в ответе после регистрации/входа (или в БД).</p>
+      <div class="row">
+        <div><label>ID пользователя</label><input id="adminUserId" type="number"></div>
+        <div>
+          <label>Новая роль</label>
+          <select id="adminRole">
+            <option value="USER">USER</option>
+            <option value="HOTEL_MANAGER">HOTEL_MANAGER</option>
+            <option value="ADMIN">ADMIN</option>
+          </select>
+        </div>
+        <div style="flex:0"><button class="btn" onclick="updateUserRole()">Изменить</button></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="toast"></div>
+
+<script>
+// ---------- state ----------
+const state = {
+  token: localStorage.getItem('hb_token') || null,
+  email: localStorage.getItem('hb_email') || null,
+  role: localStorage.getItem('hb_role') || null,
+};
+
+function apiBase() { return document.getElementById('apiBase').value.replace(/\/$/, ''); }
+
+// ---------- toast ----------
+function toast(msg, kind) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = kind || '';
+  t.style.display = 'block';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.style.display = 'none', 3500);
+}
+
+// ---------- fetch helper ----------
+async function api(method, path, body, auth) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (auth !== false && state.token) headers['Authorization'] = 'Bearer ' + state.token;
+  let res;
+  try {
+    res = await fetch(apiBase() + path, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined
+    });
+  } catch (e) {
+    toast('Не удалось соединиться с сервером: ' + apiBase(), 'error');
+    throw e;
+  }
+  if (res.status === 204) return null;
+  let data = null;
+  try { data = await res.json(); } catch (e) { /* no body */ }
+  if (!res.ok) {
+    const msg = (data && data.message) ? data.message : ('Ошибка ' + res.status);
+    toast(msg, 'error');
+    throw new Error(msg);
+  }
+  return data;
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+// ---------- auth ----------
+function renderAuthBox() {
+  const box = document.getElementById('authBox');
+  if (state.token) {
+    box.innerHTML = `<span>${esc(state.email)} <span class="badge">${esc(state.role)}</span></span>
+      <button class="btn small secondary" onclick="logout()">Выйти</button>`;
+    document.getElementById('view-auth').classList.add('section-hidden');
+  } else {
+    box.innerHTML = `<button class="btn small" onclick="showView('auth')">Войти / Регистрация</button>`;
+  }
+}
+
+function saveAuth(resp) {
+  state.token = resp.token;
+  state.email = resp.email;
+  state.role = resp.role;
+  localStorage.setItem('hb_token', resp.token);
+  localStorage.setItem('hb_email', resp.email);
+  localStorage.setItem('hb_role', resp.role);
+  renderAuthBox();
+}
+
+function logout() {
+  state.token = null; state.email = null; state.role = null;
+  localStorage.removeItem('hb_token'); localStorage.removeItem('hb_email'); localStorage.removeItem('hb_role');
+  renderAuthBox();
+  toast('Вы вышли из аккаунта');
+}
+
+async function doLogin() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const resp = await api('POST', '/api/auth/login', { email, password }, false);
+  saveAuth(resp);
+  toast('Добро пожаловать, ' + resp.email, 'success');
+  showView('browse');
+}
+
+async function doRegister() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const firstName = document.getElementById('authFirstName').value.trim();
+  const lastName = document.getElementById('authLastName').value.trim();
+  const resp = await api('POST', '/api/auth/register', { email, password, firstName, lastName }, false);
+  saveAuth(resp);
+  toast('Регистрация успешна!', 'success');
+  showView('browse');
+}
+
+// ---------- nav ----------
+function showView(name) {
+  document.querySelectorAll('#mainNav button').forEach(b => b.classList.remove('active'));
+  const navBtn = document.querySelector(`#mainNav button[data-view="${name}"]`);
+  if (navBtn) navBtn.classList.add('active');
+  ['auth','browse','bookings','manage','admin'].forEach(v => {
+    document.getElementById('view-' + v).classList.toggle('section-hidden', v !== name);
+  });
+  if (name === 'bookings') loadMyBookings();
+  if (name === 'manage') loadAmenities();
+}
+
+document.getElementById('mainNav').addEventListener('click', e => {
+  if (e.target.tagName === 'BUTTON') showView(e.target.dataset.view);
+});
+
+// ---------- hotels / browse ----------
+async function searchHotels() {
+  const city = document.getElementById('searchCity').value.trim();
+  if (!city) { toast('Введите город', 'error'); return; }
+  const data = await api('GET', '/api/hotels?city=' + encodeURIComponent(city) + '&size=30', undefined, false);
+  const list = data.content || [];
+  const el = document.getElementById('hotelsList');
+  if (list.length === 0) { el.innerHTML = '<p class="muted">Ничего не найдено.</p>'; return; }
+  el.innerHTML = list.map(h => `
+    <div class="card">
+      <h3>${esc(h.name)}</h3>
+      <p class="muted">${esc(h.city)}, ${esc(h.country)}<br>${esc(h.address)}</p>
+      <p>${esc(h.description || '')}</p>
+      <a class="link" onclick="openHotel(${h.id})">Посмотреть номера →</a>
+    </div>`).join('');
+}
+
+async function openHotel(hotelId) {
+  const [roomTypes, rating] = await Promise.all([
+    api('GET', `/api/hotels/${hotelId}/room-types`, undefined, false),
+    api('GET', `/api/hotels/${hotelId}/rating`, undefined, false).catch(() => null)
+  ]);
+
+  let ratingHtml = '';
+  if (rating && rating.reviewCount > 0) {
+    ratingHtml = `<p>⭐ ${rating.averageRating.toFixed(1)} (${rating.reviewCount} отзывов)</p>`;
+  } else {
+    ratingHtml = `<p class="muted">Пока нет отзывов</p>`;
+  }
+
+  const reviews = await api('GET', `/api/hotels/${hotelId}/reviews`, undefined, false).catch(() => []);
+  const reviewsHtml = reviews.length
+    ? reviews.map(r => `<p class="muted">⭐ ${r.rating} — ${esc(r.comment || '')}</p>`).join('')
+    : '';
+
+  const roomTypesHtml = await Promise.all(roomTypes.map(async rt => {
+    const [rooms, amenities] = await Promise.all([
+      api('GET', `/api/room-types/${rt.id}/rooms`, undefined, false).catch(() => []),
+      api('GET', `/api/room-types/${rt.id}/amenities`, undefined, false).catch(() => [])
+    ]);
+    const amenitiesHtml = amenities.length
+      ? amenities.map(a => `<span class="amenity-chip">${esc(a.name)}</span>`).join('')
+      : '<span class="muted">без доп. удобств</span>';
+    const roomsHtml = rooms.length
+      ? rooms.map(r => `
+          <div class="row" style="align-items:center;border-top:1px solid var(--border);padding-top:8px;margin-top:8px">
+            <div><b>№${esc(r.roomNumber)}</b> <span class="badge">${esc(r.status)}</span></div>
+            <div><input type="date" id="ci-${r.id}"></div>
+            <div><input type="date" id="co-${r.id}"></div>
+            <div style="flex:0"><button class="btn small" onclick="bookRoom(${r.id})">Забронировать</button></div>
+          </div>`).join('')
+      : '<p class="muted">Нет свободных номеров</p>';
+    return `
+      <div class="card">
+        <h3>${esc(rt.name)} — ${rt.basePrice} ₽/ночь</h3>
+        <p class="muted">${esc(rt.description || '')} · вместимость: ${rt.capacity}</p>
+        <div>${amenitiesHtml}</div>
+        ${roomsHtml}
+      </div>`;
+  }));
+
+  document.getElementById('hotelDetail').innerHTML = `
+    <hr>
+    <div class="card">
+      <h2>Номера отеля</h2>
+      ${ratingHtml}
+      ${reviewsHtml}
+    </div>
+    ${roomTypesHtml.join('')}
+  `;
+}
+
+async function bookRoom(roomId) {
+  if (!state.token) { toast('Сначала войдите в аккаунт', 'error'); showView('auth'); return; }
+  const checkIn = document.getElementById('ci-' + roomId).value;
+  const checkOut = document.getElementById('co-' + roomId).value;
+  if (!checkIn || !checkOut) { toast('Укажите даты заезда и выезда', 'error'); return; }
+  await api('POST', '/api/bookings', { roomId, checkIn, checkOut });
+  toast('Бронь создана! Оплатите её во вкладке "Мои брони"', 'success');
+  showView('bookings');
+}
+
+// ---------- my bookings ----------
+async function loadMyBookings() {
+  if (!state.token) {
+    document.getElementById('bookingsList').innerHTML = '<p class="muted">Войдите, чтобы увидеть свои брони.</p>';
+    return;
+  }
+  const bookings = await api('GET', '/api/bookings/my');
+  if (bookings.length === 0) {
+    document.getElementById('bookingsList').innerHTML = '<p class="muted">Пока нет броней.</p>';
+    return;
+  }
+  document.getElementById('bookingsList').innerHTML = bookings.map(b => `
+    <div class="card">
+      <div class="row" style="align-items:center">
+        <div>
+          <b>Бронь #${b.id}</b> · комната #${b.roomId}
+          <span class="badge ${b.status}">${b.status}</span><br>
+          <span class="muted">${b.checkIn} → ${b.checkOut} · ${b.totalPrice} ₽${b.cancellationFee ? ' · штраф отмены: ' + b.cancellationFee + ' ₽' : ''}</span>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        ${b.status === 'PENDING' ? `<button class="btn small" onclick="payBooking(${b.id})">Оплатить</button>` : ''}
+        ${b.status === 'PENDING' || b.status === 'CONFIRMED' ? `<button class="btn small danger" onclick="cancelBooking(${b.id})">Отменить</button>` : ''}
+        ${b.status === 'CONFIRMED' ? `<button class="btn small secondary" onclick="completeBooking(${b.id})">Завершить (владелец/admin)</button>` : ''}
+        ${b.status === 'COMPLETED' ? `<button class="btn small secondary" onclick="showReviewForm(${b.id})">Оставить отзыв</button>` : ''}
+      </div>
+      <div id="review-form-${b.id}"></div>
+    </div>`).join('');
+}
+
+async function payBooking(bookingId) {
+  const method = prompt('Способ оплаты (например: CARD)', 'CARD');
+  if (!method) return;
+  await api('POST', '/api/payments', { bookingId, paymentMethod: method });
+  toast('Оплата прошла, бронь подтверждена', 'success');
+  loadMyBookings();
+}
+
+async function cancelBooking(id) {
+  if (!confirm('Точно отменить бронь #' + id + '?')) return;
+  await api('PATCH', `/api/bookings/${id}/cancel`);
+  toast('Бронь отменена', 'success');
+  loadMyBookings();
+}
+
+async function completeBooking(id) {
+  await api('PATCH', `/api/bookings/${id}/complete`);
+  toast('Бронь отмечена завершённой', 'success');
+  loadMyBookings();
+}
+
+function showReviewForm(bookingId) {
+  document.getElementById('review-form-' + bookingId).innerHTML = `
+    <hr>
+    <label>Оценка (1-5)</label>
+    <input type="number" min="1" max="5" id="rating-${bookingId}" value="5">
+    <label>Комментарий</label>
+    <textarea id="comment-${bookingId}"></textarea>
+    <button class="btn small" onclick="submitReview(${bookingId})">Отправить отзыв</button>
+  `;
+}
+
+async function submitReview(bookingId) {
+  const rating = Number(document.getElementById('rating-' + bookingId).value);
+  const comment = document.getElementById('comment-' + bookingId).value;
+  await api('POST', `/api/bookings/${bookingId}/reviews`, { rating, comment });
+  toast('Спасибо за отзыв!', 'success');
+  document.getElementById('review-form-' + bookingId).innerHTML = '';
+}
+
+// ---------- manage (hotel manager tools) ----------
+async function createHotel() {
+  const body = {
+    name: document.getElementById('hName').value.trim(),
+    city: document.getElementById('hCity').value.trim(),
+    country: document.getElementById('hCountry').value.trim(),
+    address: document.getElementById('hAddress').value.trim(),
+    description: document.getElementById('hDescription').value.trim(),
+  };
+  const resp = await api('POST', '/api/hotels', body);
+  toast('Отель создан, id = ' + resp.id, 'success');
+}
+
+async function createRoomType() {
+  const hotelId = document.getElementById('rtHotelId').value;
+  const body = {
+    name: document.getElementById('rtName').value.trim(),
+    description: document.getElementById('rtDescription').value.trim(),
+    basePrice: Number(document.getElementById('rtPrice').value),
+    capacity: Number(document.getElementById('rtCapacity').value),
+  };
+  const resp = await api('POST', `/api/hotels/${hotelId}/room-types`, body);
+  toast('Тип номера создан, id = ' + resp.id, 'success');
+}
+
+async function createRoom() {
+  const roomTypeId = document.getElementById('roomTypeId').value;
+  const body = {
+    roomNumber: document.getElementById('roomNumber').value.trim(),
+    floor: Number(document.getElementById('roomFloor').value) || null,
+  };
+  const resp = await api('POST', `/api/room-types/${roomTypeId}/rooms`, body);
+  toast('Номер добавлен, id = ' + resp.id, 'success');
+}
+
+async function createAmenity() {
+  const name = document.getElementById('newAmenityName').value.trim();
+  if (!name) return;
+  await api('POST', '/api/amenities', { name });
+  document.getElementById('newAmenityName').value = '';
+  toast('Удобство создано', 'success');
+  loadAmenities();
+}
+
+async function attachAmenity() {
+  const roomTypeId = document.getElementById('attachRoomTypeId').value;
+  const amenityId = document.getElementById('attachAmenityId').value;
+  await api('POST', `/api/room-types/${roomTypeId}/amenities/${amenityId}`);
+  toast('Удобство привязано к типу номера', 'success');
+}
+
+async function loadAmenities() {
+  const list = await api('GET', '/api/amenities', undefined, false).catch(() => []);
+  document.getElementById('amenitiesList').innerHTML = list.length
+    ? list.map(a => `<span class="amenity-chip">#${a.id} ${esc(a.name)}</span>`).join('')
+    : '<p class="muted">Пока нет удобств.</p>';
+}
+
+// ---------- admin ----------
+async function updateUserRole() {
+  const id = document.getElementById('adminUserId').value;
+  const role = document.getElementById('adminRole').value;
+  const resp = await api('PATCH', `/api/admin/users/${id}/role`, { role });
+  toast(`Роль пользователя ${resp.email} изменена на ${resp.role}`, 'success');
+}
+
+// ---------- init ----------
+renderAuthBox();
+showView('browse');
+</script>
+
+</body>
+</html>
