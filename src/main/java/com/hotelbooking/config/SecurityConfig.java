@@ -41,7 +41,8 @@ public class SecurityConfig {
     private static final String[] PUBLIC_GET_ENDPOINTS = {
             "/api/hotels/**",
             "/api/room-types/**",
-            "/api/rooms/**"
+            "/api/rooms/**",
+            "/api/amenities/**"
     };
 
     private final CustomUserDetailsService userDetailsService;
