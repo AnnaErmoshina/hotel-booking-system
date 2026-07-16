@@ -133,6 +133,15 @@ A single ADMIN account is created automatically on first startup (see `app.admin
 promote other users to `HOTEL_MANAGER` or `ADMIN` via the endpoint above instead of editing the
 database by hand.
 
+## Simple UI
+
+`frontend/index.html` is a single, dependency-free HTML/JS page that gives every
+role (guest, USER, HOTEL_MANAGER, ADMIN) a real UI over the whole API: register/login,
+browse hotels by city, view room types with amenities/rooms/reviews/rating, book a
+room, pay, cancel, mark completed, leave a review, plus basic manager/admin tools.
+Just open `frontend/index.html` in a browser while the app is running — see
+`frontend/README.md` for details.
+
 ## Manual Testing Tool
 
 `tools/api-tester.html` is a single, dependency-free HTML page for manually exercising every
