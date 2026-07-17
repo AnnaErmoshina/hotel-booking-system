@@ -165,14 +165,30 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- @{...} (not ${...}) delays evaluation until the test JVM is
+                         actually forked, so it reliably picks up the -javaagent flag
+                         that jacoco:prepare-agent injects below - the default automatic
+                         wiring can silently fail to attach on some Windows setups
+                         (e.g. project paths with spaces/non-ASCII characters). -->
+                    <argLine>@{surefireArgLine}</argLine>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.12</version>
                 <executions>
                     <execution>
+                        <id>prepare-agent</id>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
+                        <configuration>
+                            <propertyName>surefireArgLine</propertyName>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>report</id>
