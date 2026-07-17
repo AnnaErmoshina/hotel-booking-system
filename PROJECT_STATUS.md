@@ -810,3 +810,49 @@ property, не `${...}`) откладывает подстановку до мо
 проекта в путь без кириллицы/пробелов (например `C:\projects\hotel-booking-system`),
 это радикально решает целый класс похожих проблем на Windows, не только
 с JaCoCo.
+
+---
+
+## 17. Второй заход на тесты — все сервисы и контроллеры (эта сессия)
+
+Стартовая точка: реальный прогон `mvn test` пользователя дал **33%
+покрытия** (JaCoCo, после переноса проекта в путь без кириллицы — см.
+раздел 16). Разбивка по пакетам показала: покрыты только 3 из 9
+`service.impl` классов, `controller` — 0%, `exception` — 12%.
+
+Добавлено 17 новых тестовых классов (итого 23), закрывающих:
+- Оставшиеся 6 сервисов: `PaymentServiceImplTest`, `RoomServiceImplTest`,
+  `RoomTypeServiceImplTest`, `UserServiceImplTest`,
+  `AmenityServiceImplTest`, `ReviewServiceImplTest` — ownership-проверки,
+  все кастомные исключения, основные сценарии
+- Все 9 контроллеров (`HotelController`, `AuthController`,
+  `BookingController`, `PaymentController`, `RoomController`,
+  `RoomTypeController`, `AmenityController`, `ReviewController`,
+  `AdminController`) — **без Spring-контекста и MockMvc**: контроллеры
+  тонкие (`@RequiredArgsConstructor`), инстанцируются напрямую
+  (`new HotelController(mockService)`), проверяется код статуса и
+  делегирование в сервис. Дешевле по времени выполнения и по объёму
+  кода, чем `@SpringBootTest`, покрытие даёт то же самое (сами методы
+  контроллеров — просто вызов сервиса + `ResponseEntity`, ветвлений
+  почти нет)
+- `GlobalExceptionHandlerTest` — по одному тесту на каждый из 14
+  обработчиков, заодно инстанцирует все 12 кастомных exception-классов
+  (были почти не покрыты, 12%)
+- `StandardPricingStrategyTest` — вторая реализация `PricingStrategy`,
+  раньше была не протестирована (тестировали только
+  `WeekendSurchargePricingStrategy`)
+
+**НЕ покрыто по-прежнему:** `config` (AdminSeeder/SecurityConfig/
+OpenApiConfig — @Configuration классы, требуют @SpringBootTest для
+осмысленного покрытия, а не просто unit-теста), `aspect`
+(ServiceLoggingAspect — AOP, тоже нужен реальный Spring-контекст чтобы
+проверить, что перехват работает), `dto.request`/`dto.response` (records,
+покрываются автоматически по мере использования в остальных тестах,
+отдельно не тестировались), интеграционные тесты (MockMvc+Testcontainers)
+по-прежнему отсутствуют полностью.
+
+**Следующий шаг:** прогнать `mvn test` снова, посмотреть новый % в
+`target/site/jacoco/index.html`. Ожидание — существенный рост
+(service.impl и controller были самыми крупными пакетами по строкам),
+но не 80% с одного захода — `config`/`aspect` пакеты (60 строк) всё ещё
+дадут 0%, если не написать под них отдельные `@SpringBootTest`.
