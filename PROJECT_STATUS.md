@@ -734,3 +734,28 @@ ADMIN (сменить роль пользователя по id). Работае
 
 Тесты (TODO 6.6) снова не тронуты — см. предупреждение о потерянной
 работе выше, актуально и для этой сессии.
+
+---
+
+## 14. Юнит-тесты (эта сессия, лимит бюджета — не всё покрыто)
+
+Добавлено 6 тестовых классов, ~28 тестов, Mockito + AssertJ (уже были в
+pom.xml). Покрыты **самые рискованные** классы:
+- `BookingServiceImplTest` — create/cancel/complete, overlap-проверка,
+  ownership-проверки, все исключения
+- `AuthServiceImplTest` — register/login, хеширование пароля, роль USER
+- `HotelServiceImplTest` — ownership (owner/admin/чужой)
+- `WeekendSurchargePricingStrategyTest` — будни/выходные/смешанные даты
+- `DeadlineCancellationPolicyTest` — до дедлайна/на дедлайне/после
+- `JwtServiceTest` — генерация/валидация/просрочка (через ReflectionTestUtils,
+  т.к. `@Value`-поля не инициализируются вне Spring-контекста)
+
+**НЕ покрыто (осталось на следующую сессию):**
+`PaymentServiceImpl`, `RoomServiceImpl`, `RoomTypeServiceImpl`,
+`UserServiceImpl`, `AmenityServiceImpl`, `ReviewServiceImpl` — простые
+CRUD, ниже риск, но нужны для итогового %. Также нет ни одного
+интеграционного теста (`@SpringBootTest`+`MockMvc`+Testcontainers) —
+контроллеры и связка с реальной БД не проверены тестами вообще.
+Точный % покрытия неизвестен — `mvn test`/JaCoCo ни разу не
+запускались (нет сети). Прогнать `mvn test` и глянуть
+`target/site/jacoco/index.html` — первое, что стоит сделать.
