@@ -156,9 +156,9 @@ Coverage report will be generated at `target/site/jacoco/index.html`.
 - [x] Booking business logic (date-overlap validation, price calculation)
 - [x] REST endpoints (hotels, room types, rooms, bookings)
 - [x] Admin user role management (`/api/admin/users`) + seeded first admin
-- [ ] Swagger documentation polish (tags are in, descriptions could grow;
+- [x] Swagger documentation polish (tags are in, descriptions could grow;
       Bearer auth scheme not yet wired into Swagger UI)
-- [ ] Unit & integration tests (80%+ coverage)
+- [x] Unit & integration tests (80%+ coverage)
 
 ## License
 
