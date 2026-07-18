@@ -27,17 +27,9 @@
     .subtitle { color: var(--muted); margin-bottom: 20px; font-size: 14px; }
     .top-bar {
         display: flex;
-        gap: 12px;
-        align-items: center;
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 14px 16px;
+        justify-content: flex-end;
         margin-bottom: 20px;
-        flex-wrap: wrap;
     }
-    .top-bar label { font-size: 13px; color: var(--muted); }
-    .top-bar input { flex: 1; min-width: 200px; }
     .session {
         font-size: 13px;
         padding: 6px 10px;
@@ -75,7 +67,7 @@
     form { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
     .row { display: flex; gap: 8px; }
     .row > * { flex: 1; }
-    input, textarea {
+    input, textarea, select {
         padding: 8px 10px;
         border: 1px solid var(--border);
         border-radius: 6px;
@@ -92,6 +84,7 @@
         font-size: 13px;
         cursor: pointer;
         font-weight: 600;
+        white-space: nowrap;
     }
     button:hover { background: var(--primary-dark); }
     button.secondary {
@@ -100,6 +93,14 @@
         border: 1px solid var(--primary);
     }
     button.secondary:hover { background: #eff6ff; }
+    button.link {
+        background: none;
+        color: var(--primary);
+        border: none;
+        padding: 0;
+        font-weight: 600;
+    }
+    button.link:hover { text-decoration: underline; background: none; }
     pre {
         background: #0f172a;
         color: #e2e8f0;
@@ -116,78 +117,108 @@
     .status-ok { color: #4ade80; }
     .status-err { color: #f87171; }
     hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+
+    /* Hotel list rendered as cards, not a raw JSON dump */
+    .hotel-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .hotel-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+    }
+    .hotel-item .info strong { display: block; font-size: 14px; }
+    .hotel-item .info span { font-size: 12px; color: var(--muted); }
+    .empty-hint { font-size: 13px; color: var(--muted); padding: 6px 0; }
+
+    /* Two top-level screens: the main tool, and a "separate page" for one hotel */
+    #hotelDetailScreen { display: none; }
+    .detail-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 16px;
+    }
+    .detail-header h1 { margin: 0; }
+    .room-type-card {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin-bottom: 12px;
+    }
+    .room-type-card .rt-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+    }
+    .room-type-card .rt-head strong { font-size: 14px; }
+    .room-type-card .rt-head span { font-size: 12px; color: var(--muted); }
+    .room-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+    .room-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        background: var(--bg);
+        border-radius: 6px;
+        font-size: 13px;
+    }
 </style>
 </head>
 <body>
 
-<h1>🏨 Hotel Booking System — API Tester</h1>
-<div class="subtitle">Плоская HTML-страница для ручной проверки эндпоинтов. Не часть дипломного REST API — просто инструмент.</div>
+<!-- ============ MAIN SCREEN ============ -->
+<div id="mainScreen">
 
-<div class="top-bar">
-    <label for="baseUrl">API URL:</label>
-    <input id="baseUrl" value="http://localhost:8080">
-    <span class="session" id="sessionInfo">Не авторизован</span>
-</div>
+    <h1>🏨 Hotel Booking System — API Tester</h1>
+    <div class="subtitle">Плоская HTML-страница для ручной проверки эндпоинтов. Не часть дипломного REST API — просто инструмент.</div>
 
-<div class="grid">
-
-    <!-- AUTH -->
-    <div class="card">
-        <h2>Аутентификация <span class="badge public">открыто всем</span></h2>
-        <form id="registerForm">
-            <div class="row">
-                <input name="firstName" placeholder="Имя" required>
-                <input name="lastName" placeholder="Фамилия" required>
-            </div>
-            <input name="email" type="email" placeholder="email@example.com" required>
-            <input name="password" type="password" placeholder="Пароль (мин. 8 символов)" required>
-            <button type="submit">Зарегистрироваться</button>
-        </form>
-        <hr>
-        <form id="loginForm">
-            <input name="email" type="email" placeholder="email@example.com" required>
-            <input name="password" type="password" placeholder="Пароль" required>
-            <button type="submit">Войти</button>
-        </form>
-        <pre id="authOutput">Ответ появится здесь</pre>
+    <div class="top-bar">
+        <span class="session" id="sessionInfo">Не авторизован</span>
     </div>
 
-    <!-- HOTELS -->
-    <div class="card">
-        <h2>Отели <span class="badge public">GET открыт</span><span class="badge role">POST: HOTEL_MANAGER/ADMIN</span></h2>
-        <div class="row">
-            <input id="hotelCity" placeholder="Город, например Paris">
-            <button class="secondary" onclick="listHotels()">Список</button>
-        </div>
-        <hr>
-        <form id="hotelForm">
-            <input name="name" placeholder="Название отеля" required>
-            <textarea name="description" placeholder="Описание" rows="2"></textarea>
-            <input name="address" placeholder="Адрес" required>
-            <div class="row">
-                <input name="city" placeholder="Город" required>
-                <input name="country" placeholder="Страна" required>
-            </div>
-            <button type="submit">Создать отель</button>
-        </form>
-        <pre id="hotelOutput">Ответ появится здесь</pre>
-    </div>
+    <div class="grid">
 
-    <!-- ROOM TYPES -->
-    <div class="card">
-        <h2>Типы номеров <span class="badge public">GET открыт</span><span class="badge role">POST: владелец/ADMIN</span></h2>
-        <div class="row">
-            <input id="roomTypeHotelId" placeholder="ID отеля" type="number">
-            <button class="secondary" onclick="listRoomTypes()">Список</button>
+        <!-- AUTH -->
+        <div class="card">
+            <h2>Аутентификация <span class="badge public">открыто всем</span></h2>
+            <form id="registerForm">
+                <div class="row">
+                    <input name="firstName" placeholder="Имя" required>
+                    <input name="lastName" placeholder="Фамилия" required>
+                </div>
+                <input name="email" type="email" placeholder="email@example.com" required>
+                <input name="password" type="password" placeholder="Пароль (мин. 8 символов)" required>
+                <button type="submit">Зарегистрироваться</button>
+            </form>
+            <hr>
+            <form id="loginForm">
+                <input name="email" type="email" placeholder="email@example.com" required>
+                <input name="password" type="password" placeholder="Пароль" required>
+                <button type="submit">Войти</button>
+            </form>
+            <pre id="authOutput">Ответ появится здесь</pre>
         </div>
-        <hr>
-        <form id="roomTypeForm">
-            <input name="hotelId" placeholder="ID отеля" type="number" required>
-            <input name="name" placeholder="Название (Standard, Deluxe...)" required>
-            <textarea name="description" placeholder="Описание" rows="2"></textarea>
+
+        <!-- ADMIN -->
+        <div class="card">
+            <h2>Пользователи <span class="badge role">ADMIN only</span></h2>
             <div class="row">
-                <input name="basePrice" placeholder="Цена за ночь" type="number" step="0.01" required>
-                <input name="capacity" placeholder="Вместимость" type="number" required>
+                <button class="secondary" onclick="listUsers()">Список пользователей</button>
+            </div>
+            <hr>
+            <div class="row">
+                <input id="roleUserId" placeholder="ID пользователя" type="number">
+                <select id="roleValue">
+                    <option value="USER">USER</option>
+                    <option value="HOTEL_MANAGER">HOTEL_MANAGER</option>
+                    <option value="ADMIN">ADMIN</option>
+                </select>
+                <button class="secondary" onclick="updateUserRole()">Сменить роль</button>
             </div>
             <button type="submit">Создать тип номера</button>
         </form>
@@ -221,26 +252,44 @@
             <input id="roomRoomTypeId" placeholder="ID типа номера" type="number">
             <button class="secondary" onclick="listRooms()">Список</button>
         </div>
-        <hr>
-        <form id="roomForm">
-            <input name="roomTypeId" placeholder="ID типа номера" type="number" required>
-            <div class="row">
-                <input name="roomNumber" placeholder="Номер комнаты, напр. 101" required>
-                <input name="floor" placeholder="Этаж" type="number">
-            </div>
-            <button type="submit">Добавить номер</button>
-        </form>
-        <pre id="roomOutput">Ответ появится здесь</pre>
-    </div>
 
-    <!-- BOOKINGS -->
-    <div class="card">
-        <h2>Бронирования <span class="badge auth">нужен вход</span></h2>
-        <form id="bookingForm">
-            <input name="roomId" placeholder="ID номера" type="number" required>
+        <!-- HOTELS -->
+        <div class="card">
+            <h2>Отели <span class="badge public">GET открыт</span><span class="badge role">POST: HOTEL_MANAGER/ADMIN</span></h2>
             <div class="row">
-                <input name="checkIn" type="date" required>
-                <input name="checkOut" type="date" required>
+                <input id="hotelCity" placeholder="Город, например Paris">
+                <button class="secondary" onclick="listHotels()">Список</button>
+            </div>
+            <div id="hotelList" class="hotel-list"></div>
+            <hr>
+            <form id="hotelForm">
+                <input name="name" placeholder="Название отеля" required>
+                <textarea name="description" placeholder="Описание" rows="2"></textarea>
+                <input name="address" placeholder="Адрес" required>
+                <div class="row">
+                    <input name="city" placeholder="Город" required>
+                    <input name="country" placeholder="Страна" required>
+                </div>
+                <button type="submit">Создать отель</button>
+            </form>
+            <pre id="hotelOutput">Ответ появится здесь</pre>
+        </div>
+
+        <!-- BOOKINGS -->
+        <div class="card">
+            <h2>Бронирования <span class="badge auth">нужен вход</span></h2>
+            <form id="bookingForm">
+                <input name="roomId" id="bookingRoomId" placeholder="ID номера" type="number" required>
+                <div class="row">
+                    <input name="checkIn" type="date" required>
+                    <input name="checkOut" type="date" required>
+                </div>
+                <button type="submit">Забронировать</button>
+            </form>
+            <div class="row" style="margin-top:8px">
+                <button class="secondary" onclick="myBookings()">Мои брони</button>
+                <input id="cancelBookingId" placeholder="ID брони для отмены" type="number">
+                <button class="secondary" onclick="cancelBooking()">Отменить</button>
             </div>
             <button type="submit">Забронировать</button>
         </form>
@@ -259,6 +308,7 @@
         </div>
         <pre id="bookingOutput">Ответ появится здесь</pre>
     </div>
+</div>
 
     <!-- PAYMENTS -->
     <div class="card">
@@ -302,13 +352,15 @@
 </div>
 
 <script>
+    // Hardcoded on purpose: this tool always talks to the local Docker Compose
+    // stack. Exposing an "API address" field in the UI was more confusing than
+    // useful, since it was never something people actually needed to change.
+    const API_BASE = 'http://localhost:8080';
+
     let token = null;
     let currentRole = null;
     let currentEmail = null;
-
-    function baseUrl() {
-        return document.getElementById('baseUrl').value.replace(/\/$/, '');
-    }
+    let currentHotel = null; // { id, name, city, country } of the hotel currently open in the detail screen
 
     function updateSession() {
         const el = document.getElementById('sessionInfo');
@@ -319,7 +371,7 @@
         const headers = { 'Content-Type': 'application/json' };
         if (requiresAuth && token) headers['Authorization'] = 'Bearer ' + token;
 
-        const response = await fetch(baseUrl() + path, {
+        const response = await fetch(API_BASE + path, {
             method,
             headers,
             body: body ? JSON.stringify(body) : undefined
@@ -349,6 +401,12 @@
         return data;
     }
 
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (c) => (
+            { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+        ));
+    }
+
     // --- AUTH ---
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -371,33 +429,189 @@
         updateSession();
     }
 
+    // --- ADMIN ---
+    async function listUsers() {
+        const result = await callApi('GET', '/api/admin/users', null, true);
+        render('adminOutput', result);
+    }
+
+    async function updateUserRole() {
+        const id = document.getElementById('roleUserId').value;
+        const role = document.getElementById('roleValue').value;
+        const result = await callApi('PATCH', `/api/admin/users/${id}/role`, { role }, true);
+        render('adminOutput', result);
+    }
+
     // --- HOTELS ---
     async function listHotels() {
         const city = document.getElementById('hotelCity').value || '';
         const result = await callApi('GET', `/api/hotels?city=${encodeURIComponent(city)}`, null, false);
         render('hotelOutput', result);
+        renderHotelList(result);
+    }
+
+    function renderHotelList(result) {
+        const container = document.getElementById('hotelList');
+        container.innerHTML = '';
+
+        if (!result.ok) return;
+
+        const hotels = result.data.content ?? result.data; // Page<> wraps results in .content
+        if (!Array.isArray(hotels) || hotels.length === 0) {
+            container.innerHTML = '<div class="empty-hint">Ничего не найдено. Попробуйте другой город или создайте отель ниже.</div>';
+            return;
+        }
+
+        for (const hotel of hotels) {
+            const item = document.createElement('div');
+            item.className = 'hotel-item';
+            item.innerHTML = `
+                <div class="info">
+                    <strong>${escapeHtml(hotel.name)}</strong>
+                    <span>${escapeHtml(hotel.city)}, ${escapeHtml(hotel.country)} — ${escapeHtml(hotel.address)}</span>
+                </div>
+                <button class="secondary" onclick='openHotelDetail(${JSON.stringify(hotel).replace(/'/g, "&apos;")})'>Посмотреть номера</button>
+            `;
+            container.appendChild(item);
+        }
     }
 
     document.getElementById('hotelForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const result = await callApi('POST', '/api/hotels', formToObject(e.target), true);
         render('hotelOutput', result);
+        if (result.ok) listHotels();
     });
 
-    // --- ROOM TYPES ---
-    async function listRoomTypes() {
-        const hotelId = document.getElementById('roomTypeHotelId').value;
-        const result = await callApi('GET', `/api/hotels/${hotelId}/room-types`, null, false);
-        render('roomTypeOutput', result);
+    // --- HOTEL DETAIL "PAGE" (room types + rooms + quick booking for one hotel) ---
+    function openHotelDetail(hotel) {
+        currentHotel = hotel;
+        document.getElementById('mainScreen').style.display = 'none';
+        document.getElementById('hotelDetailScreen').style.display = 'block';
+        document.getElementById('detailHotelName').textContent = hotel.name;
+        document.getElementById('detailHotelMeta').textContent = `${hotel.city}, ${hotel.country} — ${hotel.address}`;
+        loadRoomTypes();
+    }
+
+    function closeHotelDetail() {
+        currentHotel = null;
+        document.getElementById('hotelDetailScreen').style.display = 'none';
+        document.getElementById('mainScreen').style.display = 'block';
+    }
+
+    async function loadRoomTypes() {
+        const container = document.getElementById('roomTypeList');
+        container.innerHTML = '<div class="empty-hint">Загрузка…</div>';
+
+        const result = await callApi('GET', `/api/hotels/${currentHotel.id}/room-types`, null, false);
+        if (!result.ok) {
+            container.innerHTML = `<div class="empty-hint status-err">Не удалось загрузить типы номеров (статус ${result.status})</div>`;
+            return;
+        }
+
+        const roomTypes = result.data.content ?? result.data;
+        if (!Array.isArray(roomTypes) || roomTypes.length === 0) {
+            container.innerHTML = '<div class="empty-hint">У этого отеля пока нет типов номеров. Добавьте первый ниже.</div>';
+            return;
+        }
+
+        container.innerHTML = '';
+        for (const rt of roomTypes) {
+            const card = document.createElement('div');
+            card.className = 'room-type-card';
+            card.id = `rt-${rt.id}`;
+            card.innerHTML = `
+                <div class="rt-head">
+                    <div>
+                        <strong>${escapeHtml(rt.name)}</strong><br>
+                        <span>${escapeHtml(rt.description || '')}</span><br>
+                        <span>${rt.basePrice} за ночь · вместимость ${rt.capacity}</span>
+                    </div>
+                    <button class="secondary" onclick="toggleRooms(${rt.id})">Показать номера</button>
+                </div>
+                <div class="room-list" id="rooms-${rt.id}" style="display:none"></div>
+            `;
+            container.appendChild(card);
+        }
+    }
+
+    async function toggleRooms(roomTypeId) {
+        const box = document.getElementById(`rooms-${roomTypeId}`);
+        const isOpen = box.style.display !== 'none';
+        if (isOpen) {
+            box.style.display = 'none';
+            return;
+        }
+
+        box.style.display = 'flex';
+        box.innerHTML = '<div class="empty-hint">Загрузка…</div>';
+
+        const result = await callApi('GET', `/api/room-types/${roomTypeId}/rooms`, null, false);
+        if (!result.ok) {
+            box.innerHTML = `<div class="empty-hint status-err">Не удалось загрузить номера (статус ${result.status})</div>`;
+            return;
+        }
+
+        const rooms = result.data.content ?? result.data;
+        if (!Array.isArray(rooms) || rooms.length === 0) {
+            box.innerHTML = `
+                <div class="empty-hint">Номеров пока нет.</div>
+                ${addRoomFormHtml(roomTypeId)}
+            `;
+            wireAddRoomForm(roomTypeId);
+            return;
+        }
+
+        box.innerHTML = rooms.map(room => `
+            <div class="room-row">
+                <span>№ ${escapeHtml(room.roomNumber)}${room.floor ? ' · этаж ' + room.floor : ''} (id ${room.id})</span>
+                <button class="link" onclick="quickBook(${room.id})">Забронировать</button>
+            </div>
+        `).join('') + addRoomFormHtml(roomTypeId);
+        wireAddRoomForm(roomTypeId);
+    }
+
+    function addRoomFormHtml(roomTypeId) {
+        return `
+            <form id="addRoomForm-${roomTypeId}" style="margin-top:8px">
+                <div class="row">
+                    <input name="roomNumber" placeholder="Номер комнаты, напр. 101" required>
+                    <input name="floor" placeholder="Этаж" type="number">
+                    <button type="submit" class="secondary">Добавить номер</button>
+                </div>
+            </form>
+        `;
+    }
+
+    function wireAddRoomForm(roomTypeId) {
+        const form = document.getElementById(`addRoomForm-${roomTypeId}`);
+        if (!form) return;
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const result = await callApi('POST', `/api/room-types/${roomTypeId}/rooms`, formToObject(e.target), true);
+            if (result.ok) {
+                // Re-render this room type's room list so the new room shows up immediately
+                document.getElementById(`rooms-${roomTypeId}`).style.display = 'none';
+                toggleRooms(roomTypeId);
+            } else {
+                alert(`Не удалось добавить номер (статус ${result.status}): ${JSON.stringify(result.data)}`);
+            }
+        });
+    }
+
+    function quickBook(roomId) {
+        document.getElementById('detailBookingRoomId').value = roomId;
+        document.getElementById('detailBookingRoomId').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     document.getElementById('roomTypeForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const body = formToObject(e.target);
-        const hotelId = body.hotelId;
-        delete body.hotelId;
-        const result = await callApi('POST', `/api/hotels/${hotelId}/room-types`, body, true);
+        const result = await callApi('POST', `/api/hotels/${currentHotel.id}/room-types`, formToObject(e.target), true);
         render('roomTypeOutput', result);
+        if (result.ok) {
+            e.target.reset();
+            loadRoomTypes();
+        }
     });
 
     // --- AMENITIES ---
@@ -428,14 +642,11 @@
 
     document.getElementById('roomForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const body = formToObject(e.target);
-        const roomTypeId = body.roomTypeId;
-        delete body.roomTypeId;
-        const result = await callApi('POST', `/api/room-types/${roomTypeId}/rooms`, body, true);
-        render('roomOutput', result);
+        const result = await callApi('POST', '/api/bookings', formToObject(e.target), true);
+        render('detailBookingOutput', result);
     });
 
-    // --- BOOKINGS ---
+    // --- BOOKINGS (main screen) ---
     document.getElementById('bookingForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const result = await callApi('POST', '/api/bookings', formToObject(e.target), true);

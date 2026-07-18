@@ -17,3 +17,4 @@
     <include file="db/changelog/changes/010-add-cancellation-fields-to-bookings.xml"/>
 
 </databaseChangeLog>
+

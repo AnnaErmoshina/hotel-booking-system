@@ -14,6 +14,10 @@ Administrators manage the whole system.
 > first — it tracks exactly what's implemented, what's not, and known gotchas.
 > Keep it updated after any change.
 
+> **For AI agents / continuing developers:** read [`PROJECT_STATUS.md`](./PROJECT_STATUS.md)
+> first — it tracks exactly what's implemented, what's not, and known gotchas.
+> Keep it updated after any change.
+
 ## Tech Stack
 
 - **Java 17**
@@ -147,7 +151,12 @@ Just open `frontend/index.html` in a browser while the app is running — see
 ## Manual Testing Tool
 
 `tools/api-tester.html` is a single, dependency-free HTML page for manually exercising every
-endpoint (register/login, hotels, room types, rooms, bookings) without touching Swagger or curl.
+endpoint (register/login, admin/users, hotels, bookings) without touching Swagger or curl.
+It always points at `http://localhost:8080` (hardcoded — this is a local dev tool, not a
+configurable client). Browsing hotels is a two-screen flow: the hotel list is real cards
+(not a raw JSON dump), and clicking "Посмотреть номера" on a hotel opens a separate screen
+for that hotel's room types/rooms, with room-type/room creation forms and a quick "Забронировать"
+action on each room.
 Just open the file directly in a browser while the app is running via Docker Compose — no build
 step needed. It is a convenience tool only, not part of the graded REST API itself.
 
