@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.26.xsd">
+
+    <changeSet id="010-add-cancellation-fields-to-bookings" author="hotel-booking-team">
+        <addColumn tableName="bookings">
+            <column name="cancellation_fee" type="NUMERIC(10,2)"/>
+            <column name="cancelled_at" type="TIMESTAMP"/>
+        </addColumn>
+
+        <sql>
+            ALTER TABLE bookings ADD CONSTRAINT chk_bookings_cancellation_fee
+                CHECK (cancellation_fee IS NULL OR cancellation_fee >= 0);
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
