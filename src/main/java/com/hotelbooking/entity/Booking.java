@@ -48,6 +48,14 @@ public class Booking {
     @Column(name = "total_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalPrice;
 
+    // Set only when the booking is cancelled — null otherwise. Filled in by
+    // CancellationPolicy (see service/cancellation/) at cancellation time.
+    @Column(name = "cancellation_fee", precision = 10, scale = 2)
+    private BigDecimal cancellationFee;
+
+    @Column(name = "cancelled_at")
+    private LocalDateTime cancelledAt;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

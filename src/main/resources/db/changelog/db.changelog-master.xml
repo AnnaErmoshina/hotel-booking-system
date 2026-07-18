@@ -14,7 +14,7 @@
     <include file="db/changelog/changes/007-create-bookings-table.xml"/>
     <include file="db/changelog/changes/008-create-payments-table.xml"/>
     <include file="db/changelog/changes/009-create-reviews-table.xml"/>
-    <include file="db/changelog/changes/010-seed-admin-user.xml"/>
+    <include file="db/changelog/changes/010-add-cancellation-fields-to-bookings.xml"/>
 
 </databaseChangeLog>
 

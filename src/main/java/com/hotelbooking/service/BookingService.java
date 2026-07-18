@@ -13,4 +13,6 @@ public interface BookingService {
     List<BookingResponse> getMyBookings(UserPrincipal currentUser);
 
     void cancel(Long bookingId, UserPrincipal currentUser);
+
+    void complete(Long bookingId, UserPrincipal currentUser);
 }

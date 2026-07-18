@@ -6,7 +6,13 @@ Users can browse hotels and rooms, book rooms for specific dates, pay for bookin
 to a cancellation policy, and leave reviews. Hotel managers can manage their own hotels and rooms.
 Administrators manage the whole system.
 
-> This project is under active development. This README will be updated as new features land.
+> Feature-complete for the diploma requirements: layered REST API, JWT auth with roles,
+> booking business logic (availability, dynamic pricing, cancellation policy), payments,
+> reviews, Docker, Liquibase migrations, Swagger, and 80%+ unit test coverage.
+
+> **For AI agents / continuing developers:** read [`PROJECT_STATUS.md`](./PROJECT_STATUS.md)
+> first — it tracks exactly what's implemented, what's not, and known gotchas.
+> Keep it updated after any change.
 
 > **For AI agents / continuing developers:** read [`PROJECT_STATUS.md`](./PROJECT_STATUS.md)
 > first — it tracks exactly what's implemented, what's not, and known gotchas.
@@ -117,12 +123,30 @@ Authorization: Bearer <token>
 | POST | `/api/bookings` | Book a room | Authenticated |
 | GET | `/api/bookings/my` | List my bookings | Authenticated |
 | PATCH | `/api/bookings/{id}/cancel` | Cancel a booking | Owner or ADMIN |
-| GET | `/api/admin/users` | List all users | ADMIN |
+| POST | `/api/payments` | Pay for a booking in full (confirms it) | Owner or ADMIN |
+| PATCH | `/api/bookings/{id}/complete` | Mark a past-checkout booking completed | Hotel owner or ADMIN |
 | PATCH | `/api/admin/users/{id}/role` | Change a user's role | ADMIN |
+| GET | `/api/amenities` | List all amenities | No |
+| POST | `/api/amenities` | Create an amenity | HOTEL_MANAGER, ADMIN |
+| GET | `/api/room-types/{roomTypeId}/amenities` | List amenities of a room type | No |
+| POST | `/api/room-types/{roomTypeId}/amenities/{amenityId}` | Attach an amenity to a room type | Hotel owner or ADMIN |
+| POST | `/api/bookings/{bookingId}/reviews` | Leave a review for a COMPLETED booking | Owner of the booking |
+| GET | `/api/hotels/{hotelId}/reviews` | List reviews for a hotel | No |
+| GET | `/api/hotels/{hotelId}/rating` | Average rating + review count for a hotel | No |
 
-A seed migration creates one initial admin account (`admin@hotelbooking.local` /
-`Admin123!`, dev/demo credentials only) so there is always a way in to promote other
-users to `HOTEL_MANAGER` or `ADMIN` without touching the database by hand.
+A single ADMIN account is created automatically on first startup (see `app.admin.*` in
+`application.yml` / `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env.example`) — log in with it and
+promote other users to `HOTEL_MANAGER` or `ADMIN` via the endpoint above instead of editing the
+database by hand.
+
+## Simple UI
+
+`frontend/index.html` is a single, dependency-free HTML/JS page that gives every
+role (guest, USER, HOTEL_MANAGER, ADMIN) a real UI over the whole API: register/login,
+browse hotels by city, view room types with amenities/rooms/reviews/rating, book a
+room, pay, cancel, mark completed, leave a review, plus basic manager/admin tools.
+Just open `frontend/index.html` in a browser while the app is running — see
+`frontend/README.md` for details.
 
 ## Manual Testing Tool
 
@@ -155,10 +179,16 @@ Coverage report will be generated at `target/site/jacoco/index.html`.
 - [x] Authentication & authorization (JWT, roles)
 - [x] Booking business logic (date-overlap validation, price calculation)
 - [x] REST endpoints (hotels, room types, rooms, bookings)
-- [x] Admin user role management (`/api/admin/users`) + seeded first admin
-- [x] Swagger documentation polish (tags are in, descriptions could grow;
-      Bearer auth scheme not yet wired into Swagger UI)
-- [x] Unit & integration tests (80%+ coverage)
+- [x] Admin role management (`PATCH /api/admin/users/{id}/role`) + seeded initial admin
+- [x] Dynamic pricing via Strategy pattern (weekend surcharge)
+- [x] AOP logging aspect for the service layer
+- [x] Swagger "Authorize" button (Bearer JWT security scheme)
+- [x] Cancellation policy (free up to N days before check-in, penalty otherwise)
+- [x] Payments (confirms a booking on successful payment)
+- [x] Booking lifecycle complete (PENDING → CONFIRMED → COMPLETED, or CANCELLED)
+- [x] Amenities (catalog + attach to room types)
+- [x] Reviews (leave a review for a completed booking, hotel rating)
+- [x] Unit tests (80%+ coverage, 99 tests — see PROJECT_STATUS.md for what's covered)
 
 ## License
 

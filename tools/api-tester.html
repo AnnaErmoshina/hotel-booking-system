@@ -220,11 +220,37 @@
                 </select>
                 <button class="secondary" onclick="updateUserRole()">Сменить роль</button>
             </div>
-            <p style="font-size:12px;color:var(--muted);margin:6px 0 0">
-                Seed-админ для первого входа: admin@hotelbooking.local / Admin123!
-                (см. миграцию 010-seed-admin-user.xml)
-            </p>
-            <pre id="adminOutput">Ответ появится здесь</pre>
+            <button type="submit">Создать тип номера</button>
+        </form>
+        <pre id="roomTypeOutput">Ответ появится здесь</pre>
+    </div>
+
+    <!-- AMENITIES -->
+    <div class="card">
+        <h2>Удобства <span class="badge public">GET открыт</span><span class="badge role">POST: HOTEL_MANAGER/ADMIN</span></h2>
+        <button class="secondary" onclick="listAmenities()">Список всех удобств</button>
+        <hr>
+        <form id="amenityForm">
+            <input name="name" placeholder="Название (Wi-Fi, Бассейн...)" required>
+            <button type="submit">Создать удобство</button>
+        </form>
+        <hr>
+        <form id="attachAmenityForm">
+            <div class="row">
+                <input name="roomTypeId" placeholder="ID типа номера" type="number" required>
+                <input name="amenityId" placeholder="ID удобства" type="number" required>
+            </div>
+            <button type="submit">Привязать удобство к типу номера</button>
+        </form>
+        <pre id="amenityOutput">Ответ появится здесь</pre>
+    </div>
+
+    <!-- ROOMS -->
+    <div class="card">
+        <h2>Номера <span class="badge public">GET открыт</span><span class="badge role">POST: владелец/ADMIN</span></h2>
+        <div class="row">
+            <input id="roomRoomTypeId" placeholder="ID типа номера" type="number">
+            <button class="secondary" onclick="listRooms()">Список</button>
         </div>
 
         <!-- HOTELS -->
@@ -265,56 +291,64 @@
                 <input id="cancelBookingId" placeholder="ID брони для отмены" type="number">
                 <button class="secondary" onclick="cancelBooking()">Отменить</button>
             </div>
-            <pre id="bookingOutput">Ответ появится здесь</pre>
+            <button type="submit">Забронировать</button>
+        </form>
+        <div class="row" style="margin-top:8px">
+            <button class="secondary" onclick="myBookings()">Мои брони</button>
+            <input id="cancelBookingId" placeholder="ID брони" type="number">
+            <button class="secondary" onclick="cancelBooking()">Отменить</button>
         </div>
-
+        <div class="row" style="margin-top:8px">
+            <input id="completeBookingId" placeholder="ID брони" type="number">
+            <button class="secondary" onclick="completeBooking()">Завершить (COMPLETED)</button>
+        </div>
+        <div style="font-size:11px; color:var(--muted); margin-top:4px">
+            Отмена: владелец брони или ADMIN, штраф считается по CancellationPolicy.
+            Завершить может владелец отеля или ADMIN, и только после checkOut.
+        </div>
+        <pre id="bookingOutput">Ответ появится здесь</pre>
     </div>
 </div>
 
-<!-- ============ HOTEL DETAIL SCREEN (opens when you click "Посмотреть номера") ============ -->
-<div id="hotelDetailScreen">
-    <div class="detail-header">
-        <button class="secondary" onclick="closeHotelDetail()">← Все отели</button>
-        <div>
-            <h1 id="detailHotelName">Отель</h1>
-            <div class="subtitle" id="detailHotelMeta" style="margin-bottom:0"></div>
+    <!-- PAYMENTS -->
+    <div class="card">
+        <h2>Оплата <span class="badge auth">нужен вход</span></h2>
+        <div style="font-size:12px; color:var(--muted); margin-bottom:8px">
+            Оплата возможна только для брони в статусе PENDING, переводит её в CONFIRMED.
         </div>
+        <form id="paymentForm">
+            <input name="bookingId" placeholder="ID брони" type="number" required>
+            <input name="paymentMethod" placeholder="Способ оплаты, напр. card" required>
+            <button type="submit">Оплатить</button>
+        </form>
+        <pre id="paymentOutput">Ответ появится здесь</pre>
     </div>
 
-    <div class="grid">
-        <div class="card">
-            <h2>Типы номеров и номера <span class="badge public">GET открыт</span></h2>
-            <div id="roomTypeList"></div>
-            <hr>
-            <p style="font-size:12px;color:var(--muted)">Добавить тип номера в этот отель (владелец отеля или ADMIN):</p>
-            <form id="roomTypeForm">
-                <input name="name" placeholder="Название (Standard, Deluxe...)" required>
-                <textarea name="description" placeholder="Описание" rows="2"></textarea>
-                <div class="row">
-                    <input name="basePrice" placeholder="Цена за ночь" type="number" step="0.01" required>
-                    <input name="capacity" placeholder="Вместимость" type="number" required>
-                </div>
-                <button type="submit">Создать тип номера</button>
-            </form>
-            <pre id="roomTypeOutput">Ответ появится здесь</pre>
+    <!-- ADMIN -->
+    <div class="card">
+        <h2>Админ <span class="badge role">только ADMIN</span></h2>
+        <div style="font-size:12px; color:var(--muted); margin-bottom:8px">
+            При первом запуске сервер сам создаёт админа — креды в
+            <code>app.admin.*</code> (application.yml) / переменных
+            <code>ADMIN_EMAIL</code> / <code>ADMIN_PASSWORD</code> в .env
+            (по умолчанию <code>admin@hotelbooking.local</code> /
+            <code>ChangeMe123!</code>). Залогинься под ним выше, потом
+            меняй роли здесь по ID пользователя.
         </div>
-
-        <div class="card">
-            <h2>Бронирование <span class="badge auth">нужен вход</span></h2>
-            <p style="font-size:12px;color:var(--muted)">
-                Нажмите «Забронировать» у нужного номера в списке слева — сюда подставится его ID.
-            </p>
-            <form id="detailBookingForm">
-                <input name="roomId" id="detailBookingRoomId" placeholder="ID номера" type="number" required>
-                <div class="row">
-                    <input name="checkIn" type="date" required>
-                    <input name="checkOut" type="date" required>
-                </div>
-                <button type="submit">Забронировать</button>
-            </form>
-            <pre id="detailBookingOutput">Ответ появится здесь</pre>
-        </div>
+        <form id="roleForm">
+            <div class="row">
+                <input name="userId" placeholder="ID пользователя" type="number" required>
+                <select name="role" required>
+                    <option value="USER">USER</option>
+                    <option value="HOTEL_MANAGER">HOTEL_MANAGER</option>
+                    <option value="ADMIN">ADMIN</option>
+                </select>
+            </div>
+            <button type="submit">Сменить роль</button>
+        </form>
+        <pre id="adminOutput">Ответ появится здесь</pre>
     </div>
+
 </div>
 
 <script>
@@ -580,7 +614,33 @@
         }
     });
 
-    document.getElementById('detailBookingForm').addEventListener('submit', async (e) => {
+    // --- AMENITIES ---
+    async function listAmenities() {
+        const result = await callApi('GET', '/api/amenities', null, false);
+        render('amenityOutput', result);
+    }
+
+    document.getElementById('amenityForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const result = await callApi('POST', '/api/amenities', formToObject(e.target), true);
+        render('amenityOutput', result);
+    });
+
+    document.getElementById('attachAmenityForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const body = formToObject(e.target);
+        const result = await callApi('POST', `/api/room-types/${body.roomTypeId}/amenities/${body.amenityId}`, null, true);
+        render('amenityOutput', result);
+    });
+
+    // --- ROOMS ---
+    async function listRooms() {
+        const roomTypeId = document.getElementById('roomRoomTypeId').value;
+        const result = await callApi('GET', `/api/room-types/${roomTypeId}/rooms`, null, false);
+        render('roomOutput', result);
+    }
+
+    document.getElementById('roomForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const result = await callApi('POST', '/api/bookings', formToObject(e.target), true);
         render('detailBookingOutput', result);
@@ -603,6 +663,29 @@
         const result = await callApi('PATCH', `/api/bookings/${id}/cancel`, null, true);
         render('bookingOutput', result);
     }
+
+    async function completeBooking() {
+        const id = document.getElementById('completeBookingId').value;
+        const result = await callApi('PATCH', `/api/bookings/${id}/complete`, null, true);
+        render('bookingOutput', result);
+    }
+
+    // --- PAYMENTS ---
+    document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const result = await callApi('POST', '/api/payments', formToObject(e.target), true);
+        render('paymentOutput', result);
+    });
+
+    // --- ADMIN ---
+    document.getElementById('roleForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const body = formToObject(e.target);
+        const userId = body.userId;
+        delete body.userId;
+        const result = await callApi('PATCH', `/api/admin/users/${userId}/role`, body, true);
+        render('adminOutput', result);
+    });
 </script>
 
 </body>

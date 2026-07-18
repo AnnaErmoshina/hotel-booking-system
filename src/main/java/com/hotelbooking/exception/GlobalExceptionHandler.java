@@ -3,6 +3,7 @@ package com.hotelbooking.exception;
 import com.hotelbooking.dto.response.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -12,6 +13,17 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    // Thrown by @PreAuthorize when the caller is authenticated but lacks the
+    // required role (e.g. non-ADMIN hitting /api/admin/**). Without this
+    // handler, Spring Security's own 403 response bypasses our ErrorResponse
+    // format entirely - this keeps every error the same shape.
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponse(HttpStatus.FORBIDDEN.value(), "You do not have permission to perform this action"));
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex) {
@@ -41,8 +53,50 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(HttpStatus.FORBIDDEN.value(), ex.getMessage()));
     }
 
+    @ExceptionHandler(BookingAlreadyCancelledException.class)
+    public ResponseEntity<ErrorResponse> handleBookingAlreadyCancelled(BookingAlreadyCancelledException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidPaymentStateException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidPaymentState(InvalidPaymentStateException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(BookingNotCompletableException.class)
+    public ResponseEntity<ErrorResponse> handleBookingNotCompletable(BookingNotCompletableException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage()));
+    }
+
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(AmenityAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleAmenityAlreadyExists(AmenityAlreadyExistsException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(ReviewAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleReviewAlreadyExists(ReviewAlreadyExistsException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(BookingNotReviewableException.class)
+    public ResponseEntity<ErrorResponse> handleBookingNotReviewable(BookingNotReviewableException ex) {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage()));

@@ -6,6 +6,8 @@ import com.hotelbooking.entity.Booking;
 import com.hotelbooking.entity.Room;
 import com.hotelbooking.entity.enums.BookingStatus;
 import com.hotelbooking.entity.enums.Role;
+import com.hotelbooking.exception.BookingAlreadyCancelledException;
+import com.hotelbooking.exception.BookingNotCompletableException;
 import com.hotelbooking.exception.ForbiddenOperationException;
 import com.hotelbooking.exception.InvalidBookingDatesException;
 import com.hotelbooking.exception.ResourceNotFoundException;
@@ -14,12 +16,15 @@ import com.hotelbooking.repository.BookingRepository;
 import com.hotelbooking.repository.RoomRepository;
 import com.hotelbooking.security.UserPrincipal;
 import com.hotelbooking.service.BookingService;
+import com.hotelbooking.service.cancellation.CancellationPolicy;
+import com.hotelbooking.service.pricing.PricingStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.temporal.ChronoUnit;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -28,6 +33,12 @@ public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
     private final RoomRepository roomRepository;
+    // Strategy pattern: which PricingStrategy bean gets injected here is the
+    // only thing that decides how price is calculated — see service.pricing.
+    private final PricingStrategy pricingStrategy;
+    // Strategy pattern: same idea as PricingStrategy above, for the
+    // cancel-side of a booking's lifecycle — see service.cancellation.
+    private final CancellationPolicy cancellationPolicy;
 
     @Override
     @Transactional
@@ -48,8 +59,7 @@ public class BookingServiceImpl implements BookingService {
                     "Room " + room.getRoomNumber() + " is not available for the selected dates");
         }
 
-        long nights = ChronoUnit.DAYS.between(request.checkIn(), request.checkOut());
-        BigDecimal totalPrice = room.getRoomType().getBasePrice().multiply(BigDecimal.valueOf(nights));
+        BigDecimal totalPrice = pricingStrategy.calculatePrice(room, request.checkIn(), request.checkOut());
 
         Booking booking = Booking.builder()
                 .user(currentUser.getUser())
@@ -84,7 +94,49 @@ public class BookingServiceImpl implements BookingService {
             throw new ForbiddenOperationException("You do not have permission to cancel this booking");
         }
 
+        if (booking.getStatus() == BookingStatus.CANCELLED || booking.getStatus() == BookingStatus.COMPLETED) {
+            throw new BookingAlreadyCancelledException(
+                    "Booking " + booking.getId() + " is already " + booking.getStatus().name().toLowerCase());
+        }
+
+        // Strategy pattern: DeadlineCancellationPolicy (default) charges a
+        // penalty if we're cancelling too close to check-in, otherwise 0.
+        BigDecimal fee = cancellationPolicy.calculateFee(booking, LocalDate.now());
+
         booking.setStatus(BookingStatus.CANCELLED);
+        booking.setCancellationFee(fee);
+        booking.setCancelledAt(LocalDateTime.now());
+        bookingRepository.save(booking);
+    }
+
+    @Override
+    @Transactional
+    public void complete(Long bookingId, UserPrincipal currentUser) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + bookingId));
+
+        boolean isAdmin = currentUser.getUser().getRole() == Role.ADMIN;
+        boolean isHotelOwner = booking.getRoom().getRoomType().getHotel().getOwner().getId()
+                .equals(currentUser.getUser().getId());
+
+        if (!isAdmin && !isHotelOwner) {
+            throw new ForbiddenOperationException(
+                    "Only the hotel owner or an ADMIN can mark a booking as completed");
+        }
+
+        if (booking.getStatus() != BookingStatus.CONFIRMED) {
+            throw new BookingNotCompletableException(
+                    "Booking " + booking.getId() + " is " + booking.getStatus().name().toLowerCase()
+                            + ", only a CONFIRMED booking can be completed");
+        }
+
+        if (LocalDate.now().isBefore(booking.getCheckOut())) {
+            throw new BookingNotCompletableException(
+                    "Booking " + booking.getId() + " cannot be completed before its check-out date ("
+                            + booking.getCheckOut() + ")");
+        }
+
+        booking.setStatus(BookingStatus.COMPLETED);
         bookingRepository.save(booking);
     }
 
@@ -95,7 +147,8 @@ public class BookingServiceImpl implements BookingService {
                 booking.getCheckIn(),
                 booking.getCheckOut(),
                 booking.getStatus().name(),
-                booking.getTotalPrice()
+                booking.getTotalPrice(),
+                booking.getCancellationFee()
         );
     }
 }
