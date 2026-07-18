@@ -6,7 +6,9 @@ Users can browse hotels and rooms, book rooms for specific dates, pay for bookin
 to a cancellation policy, and leave reviews. Hotel managers can manage their own hotels and rooms.
 Administrators manage the whole system.
 
-> This project is under active development. This README will be updated as new features land.
+> Feature-complete for the diploma requirements: layered REST API, JWT auth with roles,
+> booking business logic (availability, dynamic pricing, cancellation policy), payments,
+> reviews, Docker, Liquibase migrations, Swagger, and 80%+ unit test coverage.
 
 > **For AI agents / continuing developers:** read [`PROJECT_STATUS.md`](./PROJECT_STATUS.md)
 > first — it tracks exactly what's implemented, what's not, and known gotchas.
@@ -177,7 +179,7 @@ Coverage report will be generated at `target/site/jacoco/index.html`.
 - [x] Booking lifecycle complete (PENDING → CONFIRMED → COMPLETED, or CANCELLED)
 - [x] Amenities (catalog + attach to room types)
 - [x] Reviews (leave a review for a completed booking, hotel rating)
-- [ ] Unit & integration tests (80%+ coverage)
+- [x] Unit tests (80%+ coverage, 99 tests — see PROJECT_STATUS.md for what's covered)
 
 ## License
 
